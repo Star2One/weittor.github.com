@@ -1,0 +1,41 @@
+# Site settings
+title: 翻滚的蜗牛
+email: im.weittor@gmail.com
+description: "Python,Linux,DevOps,Cloud"
+permalink: /:title.html
+baseurl: ""
+url: "http://blog.weittor.com"
+atom-baseurl: "http://blog.weittor.com"
+author: "chris.hill"
+weibo: "weittor"
+
+# Build settings
+# permalink: date
+
+highlighter: pygments
+markdown: redcarpet
+redcarpet:
+  extensions: [fenced_code_blocks,no_intra_emphasis,strikethrough,no_intra_emphasis,autolink,tables]
+
+#duoshuo
+  comments :
+    provider : duoshuo
+    duoshuo :
+      short_name : weittor
+
+navigations:
+  - title: About
+    class: fa fa-list-ul
+    href: /about/
+  - title: Archive
+    class: fa fa-tags
+    href: /archive/
+  - title: Categories
+    class: fa fa-user
+    href: /categories/
+  - title: Tags
+    class: fa fa-film
+    href: /tags/
+  - title: Rss
+    class: fa fa-rss
+    href: /atom.xml

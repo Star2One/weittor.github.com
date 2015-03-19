@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!-- 手机端页面 -->
+<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>FastDFS集群安装部署[4]:部署Nginx服务</title>
+<link rel="shortcut icon" href=" /img/github.ico"/>
+<link rel="bookmark" href="/img/github.ico"/>
+<meta name="viewport" content="width=device-width">
+<meta name="description" content="Python,Linux,DevOps,Cloud">
+<link rel="canonical" href="http://blog.weittor.com/install-fastdfs-cluster-deployment-4-deploy-nginx-service.html">
+<!-- Custom CSS -->
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/css/github.css">
+<!-- 返回顶部 -->
+<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+<script src="/js/jquery.js"></script>
+<script src="/js/function_about.js"></script>
+<!--  -->
+</head>
+
+<body>
+<header class="site-header">
+  <meta name="baidu-site-verification" content="93L8YEZrTw" />
+    <div class="wrap">
+        <a class="site-title" href="/"><h1><strong> <font style="color:#39B3D7" >翻</font><font style="color:#ED9C28">滚</font><font style="color:#47A447">的</font><font style="color:#D9534F">蜗</font><font style="color:#3276B1">牛</font>
+                </strong>
+        </h1></a>
+        <nav class="site-nav">
+            <a href="#" class="menu-icon">
+                <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                    viewBox="0 0 18 15" enable-background="new 0 0 18 15" xml:space="preserve">
+                    <path fill="#505050" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0
+                    h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+                    <path fill="#505050" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484
+                    h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+                    <path fill="#505050" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0
+                    c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+                </svg>
+            </a>
+            <div class="trigger">
+                
+                
+                <a class="page-link" href="/about/">About</a>
+                
+                
+                
+                <a class="page-link" href="/archive/">Archive</a>
+                
+                
+                
+                <a class="page-link" href="/categories/">Categories</a>
+                
+                
+                
+                <a class="page-link" href="/tags/">Tags</a>
+                
+                
+                
+                <a class="page-link" href="/atom.xml">Rss</a>
+                
+                
+            </div>
+        </nav>
+    </div>
+
+</header>
+
+<div class="page-content">
+    <div class="wrap">
+        <div class="post">
+    <header class="post-header">
+        <h1><a href="/install-fastdfs-cluster-deployment-4-deploy-nginx-service.html">FastDFS集群安装部署[4]:部署Nginx服务</a></h1>
+        <p class="meta"><i class="fa fa-calendar"></i> 2014-04-13&nbsp&nbsp&nbsp<i class="fa fa-folder-open"></i>&nbsp&nbsp&nbsp<i class="fa fa-tags"></i>&nbsp&nbsp<a href="/tags/#FastDFS">FastDFS</a></p>
+    </header>
+    <article class="post-content">
+        <hr>
+
+<h1>FastDFS+Nginx图片存储方案</h1>
+
+<p>服务器IP规划</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">FastDFS storage server01    192.168.122.115  
+
+FastDFS storage server02    192.168.122.116  
+
+FastDFS tracker server01    192.168.122.113  
+
+FastDFS client    192.168.122.120
+</code></pre></div>
+<p>架构图与Tracker Server的安装步骤请参考博文</p>
+
+<p><a href="http://www.weittor.com/fastdfs-cluster-deployment-1-installing-a-tracker-server.html">FastDFS集群安装部署[1]:安装Tracker Server</a>  </p>
+
+<p>Storage Server的安装步骤请参考博文</p>
+
+<p><a href="http://www.weittor.com/fastdfs-cluster-deployment-2-installing-storage-server.html">FastDFS集群安装部署[2]:安装Storage Server</a></p>
+
+<p>有关的tracker server的端口号信息如下</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">192.168.122.113:22122
+</code></pre></div>
+<p>接下来，<em>chris.hill</em>将为大家介绍访问FastDFS Web服务的Nginx搭建过程。</p>
+
+<p>结果：安装nginx作为web前端，通过HTTP访问后端FastDFS存储。  </p>
+
+<p>在storage上安装的nginx主要为了提供http的访问服务，同时解决group中storage服务器的同步延迟问题。</p>
+
+<h1>在FastDFS Storage上安装nginx</h1>
+
+<p>以下操作在<code>FastDFS storage server01    192.168.122.115</code>服务器上执行</p>
+
+<!-- more -->
+
+<h2>安装依赖软件</h2>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">yum -y install pcre-devel openssl openssl-devel
+</code></pre></div>
+<h2>下载nginx和fastdfs-nginx-module</h2>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh"><span class="nb">cd </span>install/
+wget http://nginx.org/download/nginx-1.5.9.tar.gz
+wget https://fastdfs-nginx-module.googlecode.com/files/fastdfs-nginx-module_v1.15.tar.gz
+</code></pre></div>
+<p>将这两个软件scp到另外一个storage server节点以及track server节点。</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">scp nginx-1.5.9.tar.gz fastdfs-nginx-module_v1.15.tar.gz 192.168.122.116:~/install
+scp nginx-1.5.9.tar.gz fastdfs-nginx-module_v1.15.tar.gz 192.168.122.113:~/install
+</code></pre></div>
+<h2>安装nginx和fastdfs-nginx-module</h2>
+
+<p>解压</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">tar xvzf nginx-1.5.9.tar.gz
+tar xvzf fastdfs-nginx-module_v1.15.tar.gz
+</code></pre></div>
+<h3>编译并安装nginx</h3>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh"><span class="nb">cd </span>nginx-1.5.9
+./configure --prefix<span class="o">=</span>/usr/local/nginx --add-module<span class="o">=</span>/root/install/fastdfs-nginx-module/src
+make
+make install
+</code></pre></div>
+<p>将FastDFS的nginx插件模块的配置文件copy到FastDFS配置文件目录。</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">cp ~/install/fastdfs-nginx-module/src/mod_fastdfs.conf /etc/fdfs
+</code></pre></div>
+<h3>编辑nginx.conf配置文件</h3>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">vim /usr/local/nginx/conf/nginx.conf
+</code></pre></div>
+<p>设置添加storage server的配置并保存</p>
+<div class="highlight"><pre><code class="language-nginx" data-lang="nginx">    <span class="k">......</span>
+    <span class="s">server</span> <span class="p">{</span>
+            <span class="kn">listen</span>       <span class="mi">9090</span><span class="p">;</span>
+            <span class="kn">server_name</span>  <span class="s">localhost</span><span class="p">;</span>
+    <span class="kn">......</span>
+            <span class="s">location</span> <span class="p">~</span><span class="sr">/group1/M00</span> <span class="p">{</span>
+                    <span class="kn">root</span> <span class="s">/storage/data1/data</span><span class="p">;</span>
+                    <span class="kn">ngx_fastdfs_module</span><span class="p">;</span>
+    <span class="kn">......</span> 
+    <span class="err">}</span> 
+    <span class="s">......</span>
+</code></pre></div>
+<p>创建store_path的软连接</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">ln -s /storage/data1/data /storage/data1/data/M00
+</code></pre></div>
+<p>编辑/etc/fdfs下的配置文件mod_fastdfs.conf，添加storage信息。</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">vim /etc/fdfs/mod_fastdfs.conf
+</code></pre></div>
+<p>修改相应的配置信息</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">    ......
+
+    # the base path to store log files
+    base_path=/storage/data1
+    ...
+    # FastDFS tracker_server can ocur more than once, and tracker_server format is
+    #  &quot;host:port&quot;, host can be hostname or ip address
+    # valid only when load_fdfs_parameters_from_tracker is true
+    tracker_server=192.168.122.113:22122
+
+    # the port of the local storage server
+    # the default value is 23000
+    storage_server_port=23000
+    # the group name of the local storage server
+    group_name=group1
+    # if the url / uri including the group name
+    # set to false when uri like /M00/00/00/xxx
+    # set to true when uri like ${group_name}/M00/00/00/xxx, such as group1/M00/xxx
+    # default value is false
+    url_have_group_name = true
+
+    # path(disk or mount point) count, default value is 1
+    # must same as storage.conf
+    store_path_count=1
+
+    # store_path#, based 0, if store_path0 not exists, it&#39;s value is base_path
+    # the paths must be exist
+    # must same as storage.conf
+    store_path0=/storage/data1
+
+    # set the group count
+    # set to none zero to support multi-group
+    # set to 0  for single group only
+    # groups settings section as [group1], [group2], ..., [groupN]
+    # default value is 0
+    # since v1.14
+    group_count = 1
+
+    # group settings for group #1
+    # since v1.14
+    [group1]
+    group_name=group1
+    storage_server_port=23000
+    store_path_count=1
+    store_path0=/storage/data1
+
+
+    ......
+</code></pre></div>
+<h3>测试并启动nginx服务</h3>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">/usr/local/nginx/sbin/nginx -t
+/usr/local/nginx/sbin/nginx
+ps -ef<span class="p">|</span>grep nginx
+</code></pre></div>
+<p>查看nginx日志，看是否有错误</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">tail /usr/local/nginx/logs/error.log
+</code></pre></div>
+<p>在error.log中没有错误，既启动成功。可以打开浏览器，直接访问<a href="http://192.168.122.115:9090%EF%BC%8C%E6%9F%A5%E7%9C%8B%E6%98%AF%E5%90%A6%E5%BC%B9%E5%87%BAnginx%E6%AC%A2%E8%BF%8E%E9%A1%B5%E9%9D%A2%E3%80%82">http://192.168.122.115:9090，查看是否弹出nginx欢迎页面。</a></p>
+
+<h3>设置开机自启动</h3>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh"><span class="nb">echo</span> <span class="s2">&quot;/usr/local/nginx/sbin/nginx&quot;</span> &gt;&gt; /etc/rc.local
+</code></pre></div>
+<h2>配置另一个storage server</h2>
+
+<p>在192.168.122.116服务器上，也执行同样的操作。
+安装并启动nginx服务。
+在此忽略配置过程。</p>
+
+<h1>配置Track Server的nginx服务</h1>
+
+<p>在Tracker Server上安装的nginx主要是为了实现反向代理和负载均衡功能。</p>
+
+<h2>安装相关依赖</h2>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">yum -y install pcre-devel openssl openssl-devel
+</code></pre></div>
+<h2>安装nginx</h2>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh"><span class="nb">cd </span>install/
+tar xvzf nginx-1.5.9.tar.gz
+<span class="nb">cd </span>nginx-1.5.9
+./configure --prefix<span class="o">=</span>/usr/local/nginx
+make
+make install
+</code></pre></div>
+<h2>配置nginx</h2>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">vim /usr/local/nginx/conf/nginx.conf
+</code></pre></div>
+<p>修改相应的配置信息如下</p>
+<div class="highlight"><pre><code class="language-nginx" data-lang="nginx">    <span class="k">...</span>
+
+            <span class="s">upstream</span> <span class="s">fdfs_group1</span> <span class="p">{</span>
+                    <span class="kn">server</span> <span class="n">192.168.122.115</span><span class="p">:</span><span class="mi">9090</span> <span class="s">weight=1</span> <span class="s">max_fails=2</span> <span class="s">fail_timeout=30s</span><span class="p">;</span>
+                    <span class="kn">server</span> <span class="n">192.168.122.116</span><span class="p">:</span><span class="mi">9090</span> <span class="s">weight=1</span> <span class="s">max_fails=2</span> <span class="s">fail_timeout=30s</span><span class="p">;</span>
+
+                    <span class="p">}</span>
+
+        <span class="k">server</span> <span class="p">{</span>
+            <span class="kn">listen</span>       <span class="mi">8080</span><span class="p">;</span>
+            <span class="kn">server_name</span>  <span class="s">localhost</span><span class="p">;</span>
+            <span class="kn">location</span> <span class="p">~</span> <span class="sr">/group1/M00</span> <span class="p">{</span>
+                            <span class="kn">proxy_pass</span> <span class="s">http://fdfs_group1</span><span class="p">;</span>
+            <span class="p">}</span>
+
+    <span class="kn">....</span>
+</code></pre></div>
+<h2>启动nginx服务</h2>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">/usr/local/nginx/sbin/nginx -t
+/usr/local/nginx/sbin/nginx
+</code></pre></div>
+<p>确认nginx服务启动正常</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">ps -ef<span class="p">|</span>grep nginx
+tail -f /usr/local/nginx/logs/error.log
+</code></pre></div>
+<h2>设置开机自启动</h2>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh"><span class="nb">echo</span> <span class="s2">&quot;/usr/local/nginx/sbin/nginx&quot;</span> &gt;&gt; /etc/rc.local
+</code></pre></div>
+<p>若日志里没有出现错误信息，之后可以进入下一步进行测试。</p>
+
+<h1>测试</h1>
+
+<p>在192.168.122.120客户端服务器上进行测试。
+尝试上传一个文件到FastDFS，然后访问该文件。
+配置client.conf文件。</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">vim /etc/fdfs/client.conf
+</code></pre></div>
+<p>修改参数：</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">    base_path=/var/fdfs                #日志存放路径
+    tracker_server=192.168.122.113:22122         #tracker server的IP地址和端口号
+    http.tracker_server_port=8080              #tracker server的http端口号
+</code></pre></div>
+<p>使用/usr/local/bin/fdfs_upload_file上传一个文件，程序会自动返回文件的URL。</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">fdfs_upload_file /etc/fdfs/client.conf weittor.com.1.html
+</code></pre></div>
+<p>输出信息</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">fdfs_upload_file /etc/fdfs/client.conf weittor.com.1.html
+</code></pre></div>
+<p>输出信息</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">    group1/M00/00/00/wKh6dFNCM8eALk-aAAAAM0bdRic.1.html
+</code></pre></div>
+<p>通过浏览器访问该url，测试是否正常</p>
+
+<p><a href="http://192.168.122.113:8080/group1/M00/00/00/wKh6dFNCM8eALk-aAAAAM0bdRic.1.html">http://192.168.122.113:8080/group1/M00/00/00/wKh6dFNCM8eALk-aAAAAM0bdRic.1.html</a></p>
+
+<p>正常情况下返回该文件的内容，如下</p>
+
+<p><img src="http://www.weittor.com/wp-content/uploads/2014/04/2014-4-14_FastDFS-001_800x396.png" alt=""></p>
+
+<p>至此，配置过程结束。</p>
+
+<hr>
+
+<p>作者：chris hill</p>
+
+<p>微博：<a href="http://www.weibo.com/weittor">@翻滚的蜗牛blog</a></p>
+
+    </article>
+    <!-- Duoshuo Comment BEGIN -->
+    <div id="comments">
+        <div class="ds-thread" data-thread-key="/install-fastdfs-cluster-deployment-4-deploy-nginx-service"  data-title="FastDFS集群安装部署[4]:部署Nginx服务 - 翻滚的蜗牛"></div>
+    </div>
+<!-- Duoshuo Comment END -->
+</div>
+
+    </div>
+</div>
+<footer class="site-footer">
+
+    <div class="wrap">
+        <div class="footer-col-1 column">
+            <div class="github">
+                <!-- <span class="icon github"> -->
+                <svg version="1.1" class="github-icon-svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                    viewBox="0 0 16 16" enable-background="new 0 0 16 16" xml:space="preserve">
+                    <path fill-rule="evenodd" clip-rule="evenodd" fill="#000" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761
+                    c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32
+                    c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472
+                    c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037
+                    C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65
+                    c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261
+                    c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082
+                    c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129
+                    c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/>
+                </svg>
+                <!-- </span> -->
+            </div>
+            <a href="https://github.com/taizilongxu">
+                Fork form Hackerxu
+            </a>
+        </div>
+        <div class="footer-col-2">
+            <p>© 2010 - 2014 by <font style="color:#f44336">❤ </font> <a href="http://github.com/weittor">chris.hill</a></p>
+        </div>
+        <!-- <div class="footer-col-3 column">
+      <p class="text">Python,Linux,DevOps,Cloud</p>
+    </div> -->
+    </div>
+    <div class="scroll-top"><i class="fa fa-arrow-circle-up"></i></div>
+</footer>
+
+
+<!-- mathjax -->
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}
+});
+</script>
+<script type="text/javascript"
+src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<!-- highlight -->
+<script src="/js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<!-- pleace change it! -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"weittor"};
+(function() {
+ var ds = document.createElement('script');
+ ds.type = 'text/javascript';ds.async = true;
+ ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+ ds.charset = 'UTF-8';
+ (document.getElementsByTagName('head')[0]
+  || document.getElementsByTagName('body')[0]).appendChild(ds);
+ })();
+</script>
+<!-- top-scrooll -->
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/3.0.4/jquery.imagesloaded.js"></script>
+<script type="text/javascript">
+
+$(window).scroll(function() {
+
+        if($(this).scrollTop() > 100) {
+        $('.scroll-top').fadeIn(200);
+        } else {
+        $('.scroll-top').fadeOut(200);
+        }
+        });
+
+$('.scroll-top').bind('click', function(e) {
+        e.preventDefault();
+        $('body,html').animate({scrollTop:0},200);
+        });
+</script>
+</body>
+</html>

@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!-- 手机端页面 -->
+<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>通过u盘自动化安装Debian6.0</title>
+<link rel="shortcut icon" href=" /img/github.ico"/>
+<link rel="bookmark" href="/img/github.ico"/>
+<meta name="viewport" content="width=device-width">
+<meta name="description" content="Python,Linux,DevOps,Cloud">
+<link rel="canonical" href="http://blog.weittor.com/through-the-usb-flash-disk-automation-installation-debian6-0.html">
+<!-- Custom CSS -->
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/css/github.css">
+<!-- 返回顶部 -->
+<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+<script src="/js/jquery.js"></script>
+<script src="/js/function_about.js"></script>
+<!--  -->
+</head>
+
+<body>
+<header class="site-header">
+  <meta name="baidu-site-verification" content="93L8YEZrTw" />
+    <div class="wrap">
+        <a class="site-title" href="/"><h1><strong> <font style="color:#39B3D7" >翻</font><font style="color:#ED9C28">滚</font><font style="color:#47A447">的</font><font style="color:#D9534F">蜗</font><font style="color:#3276B1">牛</font>
+                </strong>
+        </h1></a>
+        <nav class="site-nav">
+            <a href="#" class="menu-icon">
+                <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                    viewBox="0 0 18 15" enable-background="new 0 0 18 15" xml:space="preserve">
+                    <path fill="#505050" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0
+                    h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+                    <path fill="#505050" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484
+                    h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+                    <path fill="#505050" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0
+                    c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+                </svg>
+            </a>
+            <div class="trigger">
+                
+                
+                <a class="page-link" href="/about/">About</a>
+                
+                
+                
+                <a class="page-link" href="/archive/">Archive</a>
+                
+                
+                
+                <a class="page-link" href="/categories/">Categories</a>
+                
+                
+                
+                <a class="page-link" href="/tags/">Tags</a>
+                
+                
+                
+                <a class="page-link" href="/atom.xml">Rss</a>
+                
+                
+            </div>
+        </nav>
+    </div>
+
+</header>
+
+<div class="page-content">
+    <div class="wrap">
+        <div class="post">
+    <header class="post-header">
+        <h1><a href="/through-the-usb-flash-disk-automation-installation-debian6-0.html">通过u盘自动化安装Debian6.0</a></h1>
+        <p class="meta"><i class="fa fa-calendar"></i> 2012-02-20&nbsp&nbsp&nbsp<i class="fa fa-folder-open"></i>&nbsp&nbsp&nbsp<i class="fa fa-tags"></i>&nbsp&nbsp<a href="/tags/#Linux">Linux</a></p>
+    </header>
+    <article class="post-content">
+        <hr>
+
+<h1>概述</h1>
+
+<p>根据Debian官方介绍，U盘安装有很多种方法，既有简单易用的，又有复杂但不失灵活的。  </p>
+
+<p>由于chris.hill本人在实际项目没有配置网络，并且需要自动化安装大部分开发用的软件，故通过U盘安装时拷贝一个完整的系统ISO镜像进行安装。  </p>
+
+<p>因此才有了下面这篇手册的诞生。</p>
+
+<h1>u盘分区</h1>
+
+<h2>使用 cfdisk 分区工具</h2>
+
+<p>创建一个 FAT16 的分区,注意只需要使用 U 盘的第一个分区即可。  </p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">提示：
+
+    chris.hill的U盘在自己的ubuntu系统上面显示的设备名称为/dev/sdb，请根据自己的实际情况而定。  
+</code></pre></div>
+<p>执行命令：</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">cfdisk /dev/sdb
+</code></pre></div>
+<h2>使用 mkdosfs 来创建 FAT16 文件系统</h2>
+
+<p><em>可能需要先行安装 dosfstools 软件包</em></p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">mkdosfs /dev/sdb1
+</code></pre></div>
+<h1>将 syslinux 安装到 FAT16 分区</h1>
+
+<p>为了在 U 盘引导后启动内核,我们要在 U 盘上放入一个 boot loader。  </p>
+
+<p><em>尽管任何 boot loader(比如 lilo)都应该可以胜任,不过还是使用 syslinux 更方便。</em>  </p>
+
+<p>主要原因是它可以使用 FAT16 分区,而且只需要编辑一个文本文件就能对其进行配置。</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">任何支持 FAT 文件系统的操作系统都可以用来改变 boot loader 的配置文件。
+</code></pre></div>
+<p>通过 syslinux 来引导系统(如果你的系统没有 syslinux 和 mtools 包,要先行安装)</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">syslinux /dev/sdb1
+</code></pre></div>
+<!-- more -->
+
+<h1>添加安装程序映像到 U 盘</h1>
+
+<p>挂载分区</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">mount /dev/sdb1 /mnt
+</code></pre></div>
+<p>复制安装程序映像文件到U盘</p>
+
+<ul>
+<li><p>vmlinuz 或 linux (内核二进制文件)    </p></li>
+<li><p>initrd.gz (初始化 ramdisk 映象)</p></li>
+</ul>
+
+<p>可以选择使用安装程序的文本或者图形界面。后者放在 gtk 子目录下面。  </p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">如果需要改文件名，请注意 syslinux 只能处理 DOS(8.3)文件名。
+</code></pre></div>
+<h2>下载安装镜像</h2>
+
+<p>下载地址:
+<a href="http://d-i.debian.org/daily-images/amd64/daily/hd-media/">http://d-i.debian.org/daily-images/amd64/daily/hd-media/</a></p>
+
+<p>之后，拷贝镜像文件到 U 盘的根目录。</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">提示：服务器一般都下载amd64版本的。
+</code></pre></div>
+<h1>创建一个 syslinux.cfg 配置文件</h1>
+
+<p>接下来,在根目录下面创建一个 syslinux.cfg 配置文件,里面最少要包含下面两行(如果您使用 netboot 映象,修改内核文件名为“linux”):</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">default vmlinuz append <span class="nv">initrd</span><span class="o">=</span>initrd.gz
+</code></pre></div>
+<p>对于图形安装程序,您需要添加 vga=788 到第二行尾部。</p>
+
+<p>复制 debian6.0 完整 iso 镜像文件到 U 盘,即当前挂载的/mnt 目录下面。</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">cp debian-6.0.2-amd64-DVD-1.iso /mnt
+</code></pre></div>
+<p>如果不能从 U 盘启动,可能 MBR 不正确, 用下面这个命令修复它。</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">install-mbr /dev/sdb
+</code></pre></div><div class="highlight"><pre><code class="language-text" data-lang="text">提示:该工具在软件包 mbr 里面,若没有此命令,执行命令 apt-get install mbr 进行安装。
+</code></pre></div>
+<h1>编辑 syslinux.cfg 配置文件</h1>
+
+<p>添加自动化安装配置文件路径</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">vi syslinux.cfg 
+</code></pre></div>
+<p>内容如下：</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">    default vmlinuz append initrd=initrd.gz vga=788 auto=true priority=critical console-keymaps-at/keymap=us debian-installer/locale=zh_CN DEBCONF_PRIORITY=critical preseed/file=/hd-media/preseed.cfg -- quiet prompt 0 timeout 0
+</code></pre></div>
+<p>该文件中选项 preseed/file=/hd-media/preseed.cfg 用来指定从 U 盘里面获取preseed.cfg 配置文件。</p>
+
+<h1>编辑 preseed.cfg 配置文件</h1>
+<div class="highlight"><pre><code class="language-text" data-lang="text">    d-i debian-installer/locale string zh_CN
+    d-i debian-installer/language string zh_CN
+    d-i debian-installer/country string CN
+    d-i debian-installer/locale string zh_CN.UTF-8
+    d-i localechooser/supported-locales en_US.UTF-8, zh_CN.GB18030,zh_CN.GB2312
+
+    d-i console-keymaps-at/keymap select us
+
+    linx-serialnumber       linx-serialnumber/preseed       boolean  true
+    d-i  linx-serialnumber/number        string  rocky
+
+    d-i netcfg/enable boolean false
+    d-i netcfg/choose_interface select eth0
+
+    d-i netcfg/get_nameservers string 192.168.1.1
+    d-i netcfg/get_ipaddress string 192.168.1.101
+    d-i netcfg/get_netmask string 255.255.255.0
+    d-i netcfg/get_gateway string 192.168.1.1
+    d-i netcfg/confirm_static boolean true
+
+    d-i netcfg/get_hostname seen
+    d-i netcfg/get_domain seen
+
+    d-i netcfg/wireless_wep string
+
+    d-i mirror/country string manual
+    d-i mirror/http/hostname string 192.168.1.197
+    d-i mirror/http/directory string /rocky
+    d-i mirror/http/proxy string
+
+    d-i passwd/root-login boolean true
+    d-i passwd/make-user boolean false
+    d-i passwd/root-password password rocky
+    d-i passwd/root-password-again password rocky
+
+    d-i passwd/make-user boolean true
+    d-i passwd/user-fullname string d5000
+    d-i passwd/username string d5000
+    d-i passwd/user-password password d5000
+    d-i passwd/user-password-again password d5000
+    d-i passwd/user-default-groups string audio cdrom video d5000
+
+    d-i clock-setup/utc boolean false
+
+    d-i time/zone string Asia/Shanghai
+
+    d-i clock-setup/ntp boolean false
+
+    d-i partman-auto/disk string /dev/sda
+    d-i partman-auto/method string regular
+
+    d-i partman-lvm/device_remove_lvm boolean true
+    d-i partman-md/device_remove_md boolean true
+    #d-i partman-lvm/confirm boolean true
+
+    #d-i partman-auto/choose_recipe select home
+    #/dev/sda1             6.5G  1.3G  4.9G  21% /
+    #tmpfs                1008M     0 1008M   0% /lib/init/rw
+    #udev                   10M  652K  9.4M   7% /dev
+    #tmpfs                1008M     0 1008M   0% /dev/shm
+    #/dev/sda6             447G  199M  424G   1% /home
+    #rd213:~# fdisk  -l
+
+    #Disk /dev/sda: 500.1 GB, 500107862016 bytes
+    #255 heads, 63 sectors/track, 60801 cylinders
+    #Units = cylinders of 16065 * 512 = 8225280 bytes
+    #Disk identifier: 0x000f23cd
+
+    #   Device Boot      Start         End      Blocks   Id  System
+    #/dev/sda1   *           1         851     6835626   83  Linux
+    #/dev/sda2             852       60801   481548375    5  Extended
+    #/dev/sda5             852        1603     6040408+  82  Linux swap / Solaris
+    #/dev/sda6            1604       60801   475507903+  83  Linux
+
+    d-i partman-auto/expert_recipe string           \
+            boot-root ::                            \
+                    128 512 256 ext3                \
+                            $primary{ }             \
+                            $bootable{ }            \
+                            method{ format }        \
+                            format{ }               \
+                            use_filesystem{ }       \
+                            filesystem{ ext3 }      \
+                            mountpoint{ /boot }     \
+                    .                               \
+                    500 4000 5000 ext3              \
+                            $primary{ }             \
+                            method{ format }        \
+                            format{ }               \
+                            use_filesystem{ }       \
+                            filesystem{ ext3 }      \
+                            mountpoint{ / }         \
+                    .                               \
+                    96 512 300% linux-swap          \
+                            method{ swap }          \
+                            format{ }               \
+                    .                               \
+                    100 10000 -1 ext3               \
+                      method{ format }        \
+                            format{ }               \
+                            use_filesystem{ }       \
+                            filesystem{ ext3 }      \
+                            mountpoint{ /home }     \
+                    .
+
+    #文件系统              容量  已用 可用 已用% 挂载点
+    #/dev/sda2             6.5G  1.3G  4.9G  20% /
+    #tmpfs                1008M     0 1008M   0% /lib/init/rw
+    #udev                   10M  664K  9.4M   7% /dev
+    #tmpfs                1008M     0 1008M   0% /dev/shm
+    #/dev/sda1             228M   18M  199M   8% /boot
+    #/dev/sda6             447G  199M  424G   1% /home
+    #rd213:~# fdisk  -l
+
+    #Disk /dev/sda: 500.1 GB, 500107862016 bytes
+    #255 heads, 63 sectors/track, 60801 cylinders
+    #Units = cylinders of 16065 * 512 = 8225280 bytes
+    #Disk identifier: 0x000f23cd
+
+    #   Device Boot      Start         End      Blocks   Id  System
+    #/dev/sda1               1          31      248976   83  Linux
+    #/dev/sda2   *          32         882     6835657+  83  Linux
+    #/dev/sda3             883       60801   481299367+   5  Extended
+    #/dev/sda5             883        1634     6040408+  82  Linux swap / Solaris
+    #/dev/sda6            1635       60801   475258896   83  Linux
+
+    #d-i partman-basicfilesystems/swap_check_failed boolean false
+    #d-i partman-basicfilesystems/no_swap boolean false
+    #d-i partman/confirm_write_new_label boolean true
+    #d-i partman/choose_partition select finish
+    #d-i partman/confirm boolean true
+
+    d-i partman-partitioning/confirm_write_new_label boolean true
+    d-i partman/choose_partition select finish
+    d-i partman/confirm boolean true
+    d-i partman/confirm_nooverwrite boolean true
+
+    d-i partman/mount_style select uuid
+
+    d-i apt-setup/non-free boolean false
+    d-i apt-setup/contrib boolean false
+
+    #tasksel        tasksel/first   multiselect linx
+    tasksel tasksel/first  multiselect standard,web-server
+    tasksel tasksel/desktop multiselect gnome,kde
+    d-i      pkgsel/include string x-window-system-core gnome openssh-server build-essential tcsh ia32-libs ia32-libs-dev libc6-dev-i386 vim gcc g++ ttf-arphic-uming xfonts-intl-chinese
+    d-i        pkgsel/upgrade select none
+
+    #d-i finish-install/keepconsoles boolean true
+
+    #d-i console-setup/charmap47  UTF-8
+
+    #d-i grub-installer/only_rocky boolean true
+    grub-installer  grub-installer/multipath        boolean true
+    grub-installer  grub-installer/sataraid boolean true
+    grub-installer  grub-installer/multipath-error  error
+    grub-installer  grub-installer/bootdev  string
+    grub-installer  grub-installer/with_other_os    boolean true
+    grub-installer  grub-installer/only_debian      boolean true
+    grub-installer  grub-installer/grub_not_mature_on_this_platform boolean false
+
+    #d-i grub-installer/with_other_os boolean true
+
+    d-i finish-install/reboot_in_progress note
+    d-i debian-installer/exit/poweroff  boolean true
+</code></pre></div><div class="highlight"><pre><code class="language-text" data-lang="text">提示:由于实际实施环境中,网络配置的不确定性,故我们选择在自动化安装的时候,通过指定选项“d-i netcfg/enable boolean false”跳过了网络配置这一步骤。
+</code></pre></div>
+<h1>设置 BIOS 从 U 盘启动</h1>
+
+<p>将 u 盘与主机相连,调整 BIOS 里面的系统引导选项,指定系统从 U 盘启动之后,即可进行自动化安装配置。</p>
+
+<hr>
+
+<p>作者：chris hill</p>
+
+<p>微博：<a href="http://www.weibo.com/weittor">@翻滚的蜗牛blog</a></p>
+
+    </article>
+    <!-- Duoshuo Comment BEGIN -->
+    <div id="comments">
+        <div class="ds-thread" data-thread-key="/through-the-usb-flash-disk-automation-installation-debian6-0"  data-title="通过u盘自动化安装Debian6.0 - 翻滚的蜗牛"></div>
+    </div>
+<!-- Duoshuo Comment END -->
+</div>
+
+    </div>
+</div>
+<footer class="site-footer">
+
+    <div class="wrap">
+        <div class="footer-col-1 column">
+            <div class="github">
+                <!-- <span class="icon github"> -->
+                <svg version="1.1" class="github-icon-svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                    viewBox="0 0 16 16" enable-background="new 0 0 16 16" xml:space="preserve">
+                    <path fill-rule="evenodd" clip-rule="evenodd" fill="#000" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761
+                    c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32
+                    c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472
+                    c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037
+                    C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65
+                    c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261
+                    c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082
+                    c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129
+                    c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/>
+                </svg>
+                <!-- </span> -->
+            </div>
+            <a href="https://github.com/taizilongxu">
+                Fork form Hackerxu
+            </a>
+        </div>
+        <div class="footer-col-2">
+            <p>© 2010 - 2014 by <font style="color:#f44336">❤ </font> <a href="http://github.com/weittor">chris.hill</a></p>
+        </div>
+        <!-- <div class="footer-col-3 column">
+      <p class="text">Python,Linux,DevOps,Cloud</p>
+    </div> -->
+    </div>
+    <div class="scroll-top"><i class="fa fa-arrow-circle-up"></i></div>
+</footer>
+
+
+<!-- mathjax -->
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}
+});
+</script>
+<script type="text/javascript"
+src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<!-- highlight -->
+<script src="/js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<!-- pleace change it! -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"weittor"};
+(function() {
+ var ds = document.createElement('script');
+ ds.type = 'text/javascript';ds.async = true;
+ ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+ ds.charset = 'UTF-8';
+ (document.getElementsByTagName('head')[0]
+  || document.getElementsByTagName('body')[0]).appendChild(ds);
+ })();
+</script>
+<!-- top-scrooll -->
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/3.0.4/jquery.imagesloaded.js"></script>
+<script type="text/javascript">
+
+$(window).scroll(function() {
+
+        if($(this).scrollTop() > 100) {
+        $('.scroll-top').fadeIn(200);
+        } else {
+        $('.scroll-top').fadeOut(200);
+        }
+        });
+
+$('.scroll-top').bind('click', function(e) {
+        e.preventDefault();
+        $('body,html').animate({scrollTop:0},200);
+        });
+</script>
+</body>
+</html>

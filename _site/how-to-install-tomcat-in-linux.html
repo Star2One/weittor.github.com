@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!-- 手机端页面 -->
+<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>apache-tomcat安装</title>
+<link rel="shortcut icon" href=" /img/github.ico"/>
+<link rel="bookmark" href="/img/github.ico"/>
+<meta name="viewport" content="width=device-width">
+<meta name="description" content="Python,Linux,DevOps,Cloud">
+<link rel="canonical" href="http://blog.weittor.com/how-to-install-tomcat-in-linux.html">
+<!-- Custom CSS -->
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/css/github.css">
+<!-- 返回顶部 -->
+<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+<script src="/js/jquery.js"></script>
+<script src="/js/function_about.js"></script>
+<!--  -->
+</head>
+
+<body>
+<header class="site-header">
+  <meta name="baidu-site-verification" content="93L8YEZrTw" />
+    <div class="wrap">
+        <a class="site-title" href="/"><h1><strong> <font style="color:#39B3D7" >翻</font><font style="color:#ED9C28">滚</font><font style="color:#47A447">的</font><font style="color:#D9534F">蜗</font><font style="color:#3276B1">牛</font>
+                </strong>
+        </h1></a>
+        <nav class="site-nav">
+            <a href="#" class="menu-icon">
+                <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                    viewBox="0 0 18 15" enable-background="new 0 0 18 15" xml:space="preserve">
+                    <path fill="#505050" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0
+                    h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+                    <path fill="#505050" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484
+                    h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+                    <path fill="#505050" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0
+                    c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+                </svg>
+            </a>
+            <div class="trigger">
+                
+                
+                <a class="page-link" href="/about/">About</a>
+                
+                
+                
+                <a class="page-link" href="/archive/">Archive</a>
+                
+                
+                
+                <a class="page-link" href="/categories/">Categories</a>
+                
+                
+                
+                <a class="page-link" href="/tags/">Tags</a>
+                
+                
+                
+                <a class="page-link" href="/atom.xml">Rss</a>
+                
+                
+            </div>
+        </nav>
+    </div>
+
+</header>
+
+<div class="page-content">
+    <div class="wrap">
+        <div class="post">
+    <header class="post-header">
+        <h1><a href="/how-to-install-tomcat-in-linux.html">apache-tomcat安装</a></h1>
+        <p class="meta"><i class="fa fa-calendar"></i> 2013-11-17&nbsp&nbsp&nbsp<i class="fa fa-folder-open"></i>&nbsp&nbsp&nbsp<i class="fa fa-tags"></i>&nbsp&nbsp<a href="/tags/#Tomcat">Tomcat</a></p>
+    </header>
+    <article class="post-content">
+        <hr>
+<div class="highlight"><pre><code class="language-text" data-lang="text">版本信息
+    apache tomcat 7
+    jdk 1.7
+</code></pre></div>
+<h1>前期准备</h1>
+
+<h2>配置JDK</h2>
+
+<ul>
+<li>由于64位版本会提供更好的性能，故建议部署64位版本JDK在64位系统上</li>
+</ul>
+
+<p>这里选择jdk1.7_x64位版本</p>
+
+<!-- more -->
+
+<p>官方下载地址：<a href="http://www.oracle.com/technetwork/java/javase/downloads/index.html">Oracle链接</a></p>
+
+<ul>
+<li><em>chris hill</em>将常用的JDK共享到了百度网盘中，大家可以按需求下载，速度比官方下载快许多</li>
+</ul>
+
+<p><a href="http://pan.baidu.com/s/1tcKJS"><em>chris hill</em>共享地址</a></p>
+
+<h2>下载tomcat</h2>
+
+<p>这里选择zip格式的JDK安装包<em>jdk1.7.0_25-linux-x64.zip</em></p>
+
+<h2>解压软件包</h2>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">unzip -d /opt jdk1.7.0_25-linux-x64.zip
+</code></pre></div>
+<p>这里安装jdk到/opt目录下</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">ls /opt 
+jdk1.7.0_25-linux-x64
+</code></pre></div>
+<p>查看软件包信息</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">ls /opt/jdk1.7.0_25-linux-x64/java-linux-x64/
+bin db jre LICENSE README.html THIRDPARTYLICENSEREADME-JAVAFX.txt
+COPYRIGHT include lib man release THIRDPARTYLICENSEREADME.txt
+</code></pre></div>
+<p>目录说明</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">    bin  ---  执行脚本存放目录
+    jre  ---  调用java函数所需要的函数库
+    lib  ---  JDK工具用到的类库及其他文件
+    man  ---  java有关的帮助文件
+    demo  --- 含有源代码的程序示例
+    include  ---  C 语言头文件
+    db  ---  纯Java开发的数据库 Apache Derby
+</code></pre></div>
+<h2>配置JAVA系统变量</h2>
+
+<p>设定JAVA_HOME和PATH系统变量
+编辑.bash_profile文件</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">vi .bash_profile
+</code></pre></div><div class="highlight"><pre><code class="language-text" data-lang="text">JAVA_HOME=/opt/jdk1.7.0_25-linux-x64/java-linux-x64 
+PATH=$JAVA_HOME/bin:$PATH:$HOME/bin 
+export PATH JAVA_HOME
+</code></pre></div><div class="highlight"><pre><code class="language-sh" data-lang="sh"><span class="nb">source</span> .bash_profile
+</code></pre></div>
+<p>执行命令</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">java -version
+</code></pre></div>
+<p>若输出java的相关信息，说明安装成功</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">java version &quot;1.7.0_25&quot;
+Java(TM) SE Runtime Environment (build 1.7.0_25-b15)
+Java HotSpot(TM) 64-Bit Server VM (build 23.25-b01, mixed mode)
+</code></pre></div>
+<h1>安装配置</h1>
+
+<h2>下载tomcat安装包</h2>
+
+<p>下载地址<a href="http://tomcat.apache.org/download-70.cgi">Apache tomcat</a></p>
+
+<p>这里<em>chris hill</em>选择下载zip的软件包apache-tomcat-7.0.42.zip</p>
+
+<h2>解压该软件包</h2>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">unzip -d /opt apache-tomcat-7.0.42.zip
+</code></pre></div>
+<h2>启动tomcat</h2>
+
+<p>需要赋予tomcat执行文件执行权限</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh"><span class="nb">cd</span> /opt/apache-tomcat-7.0.42/bin&lt;/br&gt;
+chmod <span class="m">0755</span> *.sh
+</code></pre></div>
+<p>查看tomcat版本信息</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">./version.sh
+</code></pre></div>
+<p>输出</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">  Using CATALINA_BASE: /opt/apache-tomcat-7.0.42
+  Using CATALINA_HOME: /opt/apache-tomcat-7.0.42
+  Using CATALINA_TMPDIR: /opt/apache-tomcat-7.0.42/temp
+  Using JRE_HOME: /opt/jdk1.7.0_25-linux-x64/java-linux-x64
+  Using CLASSPATH: /opt/apache-tomcat-7.0.42/bin/bootstrap.jar:/opt/apache-tomcat-7.0.42/bin/tomcat-juli.jar
+  Server version: Apache Tomcat/7.0.42
+  Server built: Jul 2 2013 08:57:41
+  Server number: 7.0.42.0
+  OS Name: Linux
+  OS Version: 2.6.32-220.el6.x86_64
+  Architecture: amd64
+  JVM Version: 1.7.0_25-b15
+  JVM Vendor: Oracle Corporation
+</code></pre></div>
+<p>测试配置文件正确性</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">./configtest.sh
+</code></pre></div>
+<p>输出</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">  Using CATALINA_BASE: /opt/apache-tomcat-7.0.42
+  Using CATALINA_HOME: /opt/apache-tomcat-7.0.42
+  Using CATALINA_TMPDIR: /opt/apache-tomcat-7.0.42/temp
+  Using JRE_HOME: /opt/jdk1.7.0_25-linux-x64/java-linux-x64
+  Using CLASSPATH: /opt/apache-tomcat-7.0.42/bin/bootstrap.jar:/opt/apache-tomcat-7.0.42/bin/tomcat-juli.jar
+  十一月 17, 2013 9:19:02 下午 org.apache.catalina.core.AprLifecycleListener init
+  INFO: The APR based Apache Tomcat Native library which allows optimal performance in production environments was not found on the java.library.path:
+  /usr/java/packages/lib/amd64:/usr/lib64:/lib64:/lib:/usr/lib
+  十一月 17, 2013 9:19:02 下午 org.apache.catalina.startup.SetAllPropertiesRule begin
+  WARNING: [SetAllPropertiesRule]{Server/Service/Connector} Setting property &#39;maxthreads&#39; to &#39;250&#39; did not find a matching property.
+  十一月 17, 2013 9:19:03 下午 org.apache.coyote.AbstractProtocol init
+  INFO: Initializing ProtocolHandler [&quot;http-bio-8080&quot;]
+  十一月 17, 2013 9:19:03 下午 org.apache.coyote.AbstractProtocol init
+  INFO: Initializing ProtocolHandler [&quot;ajp-bio-8009&quot;]
+  十一月 17, 2013 9:19:03 下午 org.apache.catalina.startup.Catalina load
+  INFO: Initialization processed in 2050 ms
+</code></pre></div>
+<p>确认配置无误之后，启动tomcat服务</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">./startup.sh
+</code></pre></div>
+<p>默认通过浏览器访问(<a href="http://localhost:8080">http://localhost:8080</a>)</p>
+
+<p>即可看到tomcat首页的相关信息</p>
+
+<h2>关闭tomcat服务</h2>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">./shutdown.sh
+</code></pre></div>
+<p>提示：为了便于管理，可以根据不同服务编写相应tomcat服务的shell脚本</p>
+
+<hr>
+
+<p>作者：chris hill</p>
+
+<p>微博：<a href="http://wwww.weibo.com/weittor">@翻滚的蜗牛blog</a></p>
+
+    </article>
+    <!-- Duoshuo Comment BEGIN -->
+    <div id="comments">
+        <div class="ds-thread" data-thread-key="/how-to-install-tomcat-in-linux"  data-title="apache-tomcat安装 - 翻滚的蜗牛"></div>
+    </div>
+<!-- Duoshuo Comment END -->
+</div>
+
+    </div>
+</div>
+<footer class="site-footer">
+
+    <div class="wrap">
+        <div class="footer-col-1 column">
+            <div class="github">
+                <!-- <span class="icon github"> -->
+                <svg version="1.1" class="github-icon-svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                    viewBox="0 0 16 16" enable-background="new 0 0 16 16" xml:space="preserve">
+                    <path fill-rule="evenodd" clip-rule="evenodd" fill="#000" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761
+                    c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32
+                    c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472
+                    c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037
+                    C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65
+                    c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261
+                    c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082
+                    c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129
+                    c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/>
+                </svg>
+                <!-- </span> -->
+            </div>
+            <a href="https://github.com/taizilongxu">
+                Fork form Hackerxu
+            </a>
+        </div>
+        <div class="footer-col-2">
+            <p>© 2010 - 2014 by <font style="color:#f44336">❤ </font> <a href="http://github.com/weittor">chris.hill</a></p>
+        </div>
+        <!-- <div class="footer-col-3 column">
+      <p class="text">Python,Linux,DevOps,Cloud</p>
+    </div> -->
+    </div>
+    <div class="scroll-top"><i class="fa fa-arrow-circle-up"></i></div>
+</footer>
+
+
+<!-- mathjax -->
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}
+});
+</script>
+<script type="text/javascript"
+src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<!-- highlight -->
+<script src="/js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<!-- pleace change it! -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"weittor"};
+(function() {
+ var ds = document.createElement('script');
+ ds.type = 'text/javascript';ds.async = true;
+ ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+ ds.charset = 'UTF-8';
+ (document.getElementsByTagName('head')[0]
+  || document.getElementsByTagName('body')[0]).appendChild(ds);
+ })();
+</script>
+<!-- top-scrooll -->
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/3.0.4/jquery.imagesloaded.js"></script>
+<script type="text/javascript">
+
+$(window).scroll(function() {
+
+        if($(this).scrollTop() > 100) {
+        $('.scroll-top').fadeIn(200);
+        } else {
+        $('.scroll-top').fadeOut(200);
+        }
+        });
+
+$('.scroll-top').bind('click', function(e) {
+        e.preventDefault();
+        $('body,html').animate({scrollTop:0},200);
+        });
+</script>
+</body>
+</html>

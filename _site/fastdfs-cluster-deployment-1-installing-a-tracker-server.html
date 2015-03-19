@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!-- 手机端页面 -->
+<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>FastDFS集群安装部署[1]:安装Tracker Server</title>
+<link rel="shortcut icon" href=" /img/github.ico"/>
+<link rel="bookmark" href="/img/github.ico"/>
+<meta name="viewport" content="width=device-width">
+<meta name="description" content="Python,Linux,DevOps,Cloud">
+<link rel="canonical" href="http://blog.weittor.com/fastdfs-cluster-deployment-1-installing-a-tracker-server.html">
+<!-- Custom CSS -->
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/css/github.css">
+<!-- 返回顶部 -->
+<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+<script src="/js/jquery.js"></script>
+<script src="/js/function_about.js"></script>
+<!--  -->
+</head>
+
+<body>
+<header class="site-header">
+  <meta name="baidu-site-verification" content="93L8YEZrTw" />
+    <div class="wrap">
+        <a class="site-title" href="/"><h1><strong> <font style="color:#39B3D7" >翻</font><font style="color:#ED9C28">滚</font><font style="color:#47A447">的</font><font style="color:#D9534F">蜗</font><font style="color:#3276B1">牛</font>
+                </strong>
+        </h1></a>
+        <nav class="site-nav">
+            <a href="#" class="menu-icon">
+                <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                    viewBox="0 0 18 15" enable-background="new 0 0 18 15" xml:space="preserve">
+                    <path fill="#505050" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0
+                    h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+                    <path fill="#505050" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484
+                    h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+                    <path fill="#505050" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0
+                    c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+                </svg>
+            </a>
+            <div class="trigger">
+                
+                
+                <a class="page-link" href="/about/">About</a>
+                
+                
+                
+                <a class="page-link" href="/archive/">Archive</a>
+                
+                
+                
+                <a class="page-link" href="/categories/">Categories</a>
+                
+                
+                
+                <a class="page-link" href="/tags/">Tags</a>
+                
+                
+                
+                <a class="page-link" href="/atom.xml">Rss</a>
+                
+                
+            </div>
+        </nav>
+    </div>
+
+</header>
+
+<div class="page-content">
+    <div class="wrap">
+        <div class="post">
+    <header class="post-header">
+        <h1><a href="/fastdfs-cluster-deployment-1-installing-a-tracker-server.html">FastDFS集群安装部署[1]:安装Tracker Server</a></h1>
+        <p class="meta"><i class="fa fa-calendar"></i> 2014-04-09&nbsp&nbsp&nbsp<i class="fa fa-folder-open"></i>&nbsp&nbsp&nbsp<i class="fa fa-tags"></i>&nbsp&nbsp<a href="/tags/#FastDFS">FastDFS</a></p>
+    </header>
+    <article class="post-content">
+        <hr>
+
+<h1>FastDFS+Nginx图片存储方案</h1>
+
+<p>FastDFS是一个开源的轻量级分布式文件系统，功能包括：文件存储、文件同步、文件访问（文件上传、文件下载）等，解决了大容量存储和负载均衡的问题。特别适合应用于以文件为载体的在线服务，如相册网站、视频网站等。  </p>
+
+<p>FastDFS服务端有两个角色：跟踪器（tracker server）和存储节点（storage server）。  </p>
+
+<p>跟踪器主要起调度工作，在访问上起负载均衡的作用。存储节点用于存储数据，直接向前端服务提供数据。</p>
+
+<p>接下来，<em>chris.hill</em>将通过实例为大家介绍有关FastDFS集群的搭建过程。</p>
+
+<p><strong>服务器IP规划</strong></p>
+
+<blockquote>
+<p>FastDFS storage server01    192.168.122.115<br>
+FastDFS storage server02    192.168.122.116<br>
+FastDFS tracker server01    192.168.122.113<br>
+FastDFS client    192.168.122.120</p>
+</blockquote>
+
+<p><strong>架构图如下</strong></p>
+
+<p><img src="/images/2014year/2014040701.FastDFS.Cluster.Arch.png" alt=""></p>
+
+<h1>部属FastDFS Tracker Server</h1>
+
+<p>以下操作在<code>FastDFS tracker server01    192.168.122.113</code>服务器上进行</p>
+
+<!-- more -->
+
+<h2>安装依赖软件包</h2>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">yum install -y wget gcc make
+</code></pre></div>
+<h2>安装libevent网络库</h2>
+
+<p>FastDFS依赖开源网络库libevent，因此先安装它。  </p>
+
+<p>libevent的官方站点：<a href="http://libevent.org/">http://libevent.org/</a>  </p>
+
+<p>下载并安装最新版。</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">mkdir install   <span class="c">#创建目录</span>
+<span class="nb">cd </span>install
+wget <span class="s2">&quot;https://github.com/downloads/libevent/libevent/libevent-2.0.21-stable.tar.gz&quot;</span> <span class="c">##下载</span>
+tar zxf libevent-2.0.21-stable.tar.gz   <span class="c">#解压</span>
+<span class="nb">cd </span>libevent-2.0.21-stable
+./configure --prefix<span class="o">=</span>/usr  <span class="c">#编译</span>
+make
+make install    <span class="c">#安装</span>
+ldconfig    <span class="c">#使相关库依赖生效</span>
+</code></pre></div>
+<h2>安装FastDFS Tracker Server</h2>
+
+<p>下载地址：(<a href="http://code.google.com/p/fastdfs/">http://code.google.com/p/fastdfs/</a>)</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh"><span class="nb">cd</span> ～/install/
+wget http://fastdfs.googlecode.com/files/FastDFS_v4.06.tar.gz   <span class="c">#下载</span>
+tar xvzf FastDFS_v4.06.tar.gz   <span class="c">#解压</span>
+<span class="nb">cd </span>FastDFS
+ls
+</code></pre></div>
+<p>编辑安装配置文件make.sh</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">vim make.sh
+<span class="c">###取消WITH_LINUX_SERVICE=1选项前面的注释</span>
+</code></pre></div>
+<blockquote>
+<p><em>提示</em>:新版的FastDFS去掉了内置的HTTP服务，因此无需修改有关HTTP服务的配置  </p>
+</blockquote>
+
+<p>执行安装</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">./make.sh
+./make.sh install
+</code></pre></div>
+<p>查看fdfs进程启动选项</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">chkconfig --list <span class="p">|</span> grep fdfs
+</code></pre></div>
+<p>输出</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">    fdfs_storaged   0:关闭  1:关闭  2:启用  3:启用  4:启用  5:启用  6:关闭
+    fdfs_trackerd   0:关闭  1:关闭  2:启用  3:启用  4:启用  5:启用  6:关闭
+</code></pre></div>
+<p>fastdfs默认的配置文件被放置在/etc/fdfs目录下面，包含了
+<em>client.conf  http.conf  mime.types  storage.conf  tracker.conf</em>这五个文件。  </p>
+
+<p>fastdfs进程的启动是以加载的配置文件区分的。</p>
+
+<h2>配置FastDFS Tracker Server</h2>
+
+<p>FastDFS的配置文件在/etc/fdfs目录下</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">ls /etc/fdfs
+client.conf  http.conf  mime.types  storage.conf  tracker.conf
+</code></pre></div>
+<p>配置文件定义</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">    client.conf    客户端上传配置文件
+    storage.conf    文件存储服务器配置文件
+    tracker.conf    负责均衡调度服务器配置文件
+    http.conf        http服务器配置文件
+</code></pre></div>
+<p>修改 tracker.conf
+配置FastDFS Tracker Server，需要修改 tracker.conf 配置文件</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">vim /etc/fdfs/tracker.conf
+...
+<span class="c"># the base path to store data and log files</span>
+<span class="c"># 数据和日志的存储目录，需要自行创建该目录</span>
+<span class="nv">base_path</span><span class="o">=</span>/var/fdfs
+...
+
+<span class="c"># HTTP port on this tracker server</span>
+<span class="c">#HTTP服务的端口号</span>
+http.server_port<span class="o">=</span>9090
+...
+</code></pre></div>
+<p>提示：其他配置选项保持默认。新版的FastDFS去掉的内置的HTTP server，因此后续需要集成nginx作为默认的http server。</p>
+
+<p>创建数据存储目录</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">mkdir -p /var/fdfs
+</code></pre></div>
+<p>启动fdfs_trackerd服务</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">service fdfs_trackerd start
+Starting FastDFS tracker server:
+</code></pre></div>
+<p>注意：执行脚本既不会显示成功也不会显示失败，所以需要确认一下状态。</p>
+
+<p>确认fdfs_trackerd是否已经正常启动</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">service fdfs_trackerd status
+</code></pre></div>
+<p>查看fdfs_trackerd的日志</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">tail -f /var/fastdfs/logs/trackerd.log
+</code></pre></div>
+<p>关闭fdfs_storaged 服务。因为这台机器上只需要启动 fdfs_trackerd 服务。</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">chkconfig fdfs_storaged off
+chkconfig --list <span class="p">|</span> grep fdfs
+</code></pre></div>
+<p>输出</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">    fdfs_storaged   0:关闭  1:关闭  2:关闭  3:关闭  4:关闭  5:关闭  6:关闭
+    fdfs_trackerd   0:关闭  1:关闭  2:启用  3:启用  4:启用  5:启用  6:关闭
+</code></pre></div>
+<p>最后，查看一下FastDFS存储目录里面的内容</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">ls /var/fastdfs/
+data  logs
+tree /var/fastdfs/
+</code></pre></div>
+<p>到此为止，192.168.122.113服务器上的FastDFS Tracker Server 已经安装完成并启动。</p>
+
+<p>停止进程，可以使用命令：</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">service fdfs_trackerd stop
+</code></pre></div>
+<p>下一步我们将部署FastDFS Storage Server ，请参考后续博文。</p>
+
+<h1>附录</h1>
+
+<blockquote>
+<p>配置说明转载于51CTO博客，具体哪位童鞋写的，找不到了，不好意思。</p>
+</blockquote>
+
+<p>tracker.conf配置文件说明</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">    disabled=false
+    #配置是否生效
+    bind_addr=192.168.6.102
+    #绑定IP
+    port=22122
+    #服务端口
+    connect_timeout=30
+    #连接超时时间
+    network_timeout=60
+    #  tracker server的网络超时，单位为秒。
+    base_path=/home/yangzi
+    #目录地址，里面会创建data(存放存储服务器信息)、logs，日志文件
+    max_connections=256
+    #系统提供服务最大连接数
+    work_threads=4
+    #线程数，通常设置CPU数
+    store_lookup=2
+    #上传组(卷) 的方式 0:轮询方式 1: 指定组 2: 平衡负载(选择最大剩余空间的组(卷)上传)
+    #这里如果在应用层指定了上传到一个固定组,那么这个参数被绕过
+    store_group=group1
+    #当上一个参数设定为1 时 (store_lookup=1，即指定组名时)，必须设置本参数为系统中存在的一个组名。如果选择其他的上传方式，这个参数就没有效了
+    store_server=0
+    #选择哪个storage server 进行上传操作(一个文件被上传后，这个storage server就相当于这个文件的storage server源，会对同组的storage server推送这个文件达到同步效果)
+    # 0: 轮询方式
+    # 1: 根据ip 地址进行排序选择第一个服务器（IP地址最小者）
+    # 2: 根据优先级进行排序（上传优先级由storage server来设置，参数名为upload_priority）
+    store_path=0
+    #选择storage server 中的哪个目录进行上传。storage server可以有多个存放文件的base path（可以理解为多个磁盘）。
+    # 0: 轮流方式，多个目录依次存放文件
+    # 2: 选择剩余空间最大的目录存放文件（注意：剩余磁盘空间是动态的，因此存储到的目录或磁盘可能也是变化的）
+    download_server=0
+    #选择哪个 storage server 作为下载服务器
+    # 0: 轮询方式，可以下载当前文件的任一storage server
+    # 1: 哪个为源storage server 就用哪一个 (前面说过了这个storage server源 是怎样产生的) 就是之前上传到哪个storage server服务器就是哪个了
+    reserved_storage_space = 4GB
+    #storage server 上保留的空间,保证系统或其他应用需求空间(指出 如果同组的服务器的硬盘大小一样,以最小的为准,也就是只要同组中有一台服务器达到这个标准了,这个标准就生效,原因就是因为他们进行备份)
+    log_level=info
+    #选择日志级别
+    run_by_group=
+    #操作系统运行FastDFS的用户组
+    run_by_user=
+    #操作系统运行FastDFS的用户
+    allow_hosts=*
+    #可以连接到此 tracker server 的ip范围（对所有类型的连接都有影响，包括客户端，storage server）
+    sync_log_buff_interval = 10
+    # 同步或刷新日志信息到硬盘的时间间隔，单位为秒
+    # 注意：tracker server 的日志不是时时写硬盘的，而是先写内存。
+    check_active_interval = 120
+    # 检测 storage server 存活的时间隔，单位为秒。
+    # storage server定期向tracker server 发心跳，如果tracker server在一个check_active_interval内还没有收到storage server的一次心跳，那边将认为该storage server已经下线。所以本参数值必须大于storage server配置的心跳时间间隔。通常配置为storage server心跳时间间隔的2倍或3倍。
+    thread_stack_size = 64KB
+    # 线程栈的大小。FastDFS server端采用了线程方式。更正一下，tracker server线程栈不应小于64KB，不是512KB。
+    # 线程栈越大，一个线程占用的系统资源就越多。如果要启动更多的线程（V1.x对应的参数为max_connections，
+    V2.0为work_threads），可以适当降低本参数值。
+    storage_ip_changed_auto_adjust = true
+    # 这个参数控制当storage server IP地址改变时，集群是否自动调整。注：只有在storage server进程重启时才完成自动调整。
+    storage_sync_file_max_delay = 86400
+    # V2.0引入的参数。存储服务器之间同步文件的最大延迟时间，缺省为1天。根据实际情况进行调整
+    storage_sync_file_max_time = 300
+    # V2.0引入的参数。存储服务器同步一个文件需要消耗的最大时间，缺省为300s，即5分钟。
+    http.disabled=true
+    # HTTP服务是否不生效 当然编译的时候我已经把 with_httpd宏去掉了，
+    http.server_port=80
+    # HTTP服务端口
+    # 下列参数只有 开启http服务才有用
+    http.check_alive_interval=30
+    http.check_alive_type=tcp
+    http.check_alive_uri=/status.html
+    http.need_find_content_type=true
+</code></pre></div>
+<hr>
+
+<p>作者：chris hill</p>
+
+<p>微博：<a href="http://www.weibo.com/weittor">@翻滚的蜗牛blog</a></p>
+
+    </article>
+    <!-- Duoshuo Comment BEGIN -->
+    <div id="comments">
+        <div class="ds-thread" data-thread-key="/fastdfs-cluster-deployment-1-installing-a-tracker-server"  data-title="FastDFS集群安装部署[1]:安装Tracker Server - 翻滚的蜗牛"></div>
+    </div>
+<!-- Duoshuo Comment END -->
+</div>
+
+    </div>
+</div>
+<footer class="site-footer">
+
+    <div class="wrap">
+        <div class="footer-col-1 column">
+            <div class="github">
+                <!-- <span class="icon github"> -->
+                <svg version="1.1" class="github-icon-svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                    viewBox="0 0 16 16" enable-background="new 0 0 16 16" xml:space="preserve">
+                    <path fill-rule="evenodd" clip-rule="evenodd" fill="#000" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761
+                    c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32
+                    c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472
+                    c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037
+                    C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65
+                    c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261
+                    c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082
+                    c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129
+                    c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/>
+                </svg>
+                <!-- </span> -->
+            </div>
+            <a href="https://github.com/taizilongxu">
+                Fork form Hackerxu
+            </a>
+        </div>
+        <div class="footer-col-2">
+            <p>© 2010 - 2014 by <font style="color:#f44336">❤ </font> <a href="http://github.com/weittor">chris.hill</a></p>
+        </div>
+        <!-- <div class="footer-col-3 column">
+      <p class="text">Python,Linux,DevOps,Cloud</p>
+    </div> -->
+    </div>
+    <div class="scroll-top"><i class="fa fa-arrow-circle-up"></i></div>
+</footer>
+
+
+<!-- mathjax -->
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}
+});
+</script>
+<script type="text/javascript"
+src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<!-- highlight -->
+<script src="/js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<!-- pleace change it! -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"weittor"};
+(function() {
+ var ds = document.createElement('script');
+ ds.type = 'text/javascript';ds.async = true;
+ ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+ ds.charset = 'UTF-8';
+ (document.getElementsByTagName('head')[0]
+  || document.getElementsByTagName('body')[0]).appendChild(ds);
+ })();
+</script>
+<!-- top-scrooll -->
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/3.0.4/jquery.imagesloaded.js"></script>
+<script type="text/javascript">
+
+$(window).scroll(function() {
+
+        if($(this).scrollTop() > 100) {
+        $('.scroll-top').fadeIn(200);
+        } else {
+        $('.scroll-top').fadeOut(200);
+        }
+        });
+
+$('.scroll-top').bind('click', function(e) {
+        e.preventDefault();
+        $('body,html').animate({scrollTop:0},200);
+        });
+</script>
+</body>
+</html>

@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!-- 手机端页面 -->
+<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>RPM软件包编译指南v1.0</title>
+<link rel="shortcut icon" href=" /img/github.ico"/>
+<link rel="bookmark" href="/img/github.ico"/>
+<meta name="viewport" content="width=device-width">
+<meta name="description" content="Python,Linux,DevOps,Cloud">
+<link rel="canonical" href="http://blog.weittor.com/rpm-packages-compiled-guide-v1-0.html">
+<!-- Custom CSS -->
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/css/github.css">
+<!-- 返回顶部 -->
+<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+<script src="/js/jquery.js"></script>
+<script src="/js/function_about.js"></script>
+<!--  -->
+</head>
+
+<body>
+<header class="site-header">
+  <meta name="baidu-site-verification" content="93L8YEZrTw" />
+    <div class="wrap">
+        <a class="site-title" href="/"><h1><strong> <font style="color:#39B3D7" >翻</font><font style="color:#ED9C28">滚</font><font style="color:#47A447">的</font><font style="color:#D9534F">蜗</font><font style="color:#3276B1">牛</font>
+                </strong>
+        </h1></a>
+        <nav class="site-nav">
+            <a href="#" class="menu-icon">
+                <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                    viewBox="0 0 18 15" enable-background="new 0 0 18 15" xml:space="preserve">
+                    <path fill="#505050" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0
+                    h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+                    <path fill="#505050" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484
+                    h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+                    <path fill="#505050" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0
+                    c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+                </svg>
+            </a>
+            <div class="trigger">
+                
+                
+                <a class="page-link" href="/about/">About</a>
+                
+                
+                
+                <a class="page-link" href="/archive/">Archive</a>
+                
+                
+                
+                <a class="page-link" href="/categories/">Categories</a>
+                
+                
+                
+                <a class="page-link" href="/tags/">Tags</a>
+                
+                
+                
+                <a class="page-link" href="/atom.xml">Rss</a>
+                
+                
+            </div>
+        </nav>
+    </div>
+
+</header>
+
+<div class="page-content">
+    <div class="wrap">
+        <div class="post">
+    <header class="post-header">
+        <h1><a href="/rpm-packages-compiled-guide-v1-0.html">RPM软件包编译指南v1.0</a></h1>
+        <p class="meta"><i class="fa fa-calendar"></i> 2012-02-15&nbsp&nbsp&nbsp<i class="fa fa-folder-open"></i>&nbsp&nbsp&nbsp<i class="fa fa-tags"></i>&nbsp&nbsp<a href="/tags/#Linux">Linux</a></p>
+    </header>
+    <article class="post-content">
+        <hr>
+
+<h1>准备工作</h1>
+
+<h2>安装必备软件</h2>
+
+<p>gcc 编译的工具</p>
+
+<ul>
+<li>rpm-build<br></li>
+<li>kernel-devel<br></li>
+<li>make<br></li>
+</ul>
+
+<p>执行命令：</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">yum install gcc rpm-build kernel-devel make -y
+</code></pre></div><div class="highlight"><pre><code class="language-text" data-lang="text">注意事项
+    1)在封装源码包前,必须保证源码包的代码可以正常通过编译，   
+        即./configure --&gt;make --&gt;make install 没有报错    
+    2)不要使用 root用户来编译rpm包。如果在编写过程中编译脚本报错,会直接影响系统的稳定性和安全性，推荐通过创建用户 rpmbuild，进行 rpm 软件包的编译工作。    
+        添加rpmbuild
+        用户执行命令：     
+            useradd -m rpmbuild    
+    3)编写好.spec配置脚本，必须使用 rpmbuild -b[...] spec-file 来测试脚本是否存在错误    
+</code></pre></div>
+<h2>设置环境变量</h2>
+
+<p>编译的过程中,系统会调用很多变量来对源码包进行封装和安装。<br>
+这些变量存放在以下两个文件系统环境变量/usr/lib/rpm/macros用户自定义变量~HOME/.rpmmacros。    </p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">说明：
+    自定义宏变量,存放在自己的家目录下。    
+    在使用 rpmbuild 用户来封装RPM包的时候，系统会优先调用局部宏变量，再调用系统环境文件。    
+    也就是说,当 rpmbuild用户封装 RPM 包的时候，系统会优先使用 /home/rpmbuild/.rpmmacros 文件里的变量，当这个文件的变量缺少的时候，会再去调用 /usr/lib/rpm/macros 文件里的变量。     
+    一般我们需要配置用户自定义变量~HOME/.rpmmacros。    
+    添加相应内容     
+        vi .rpmmacros
+</code></pre></div>
+<h2>创建目录结构</h2>
+
+<p>编译rpm软件包需要事先创建好特定的目录结构。</p>
+
+<p>首先查看目录系统默认的编译主目录。<br>
+执行命令：</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">cat /usr/lib/rpm/macros<span class="p">|</span>grep %_topdir
+</code></pre></div>
+<p>由上可知系统变量设定的编译主目录为编译用户家目录HOME下面的rpmbuild目录。<br>
+故由于我们使用rpmbuild用户进行编译，故需要在rpmbuild用户家目录下面创建需要编译的目录结构。<br>
+执行命令：</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">mkdir /home/rpmbuild/rpmbuild
+<span class="nb">cd</span> /home/rpmbuild/rpmbuild
+mkdir BUILD BUILDROOT RPMS SOURCES SPECS SRPMS
+<span class="nb">cd </span>RPMS
+mkdir athlon geode i386 i686 x86_64 noarch
+</code></pre></div>
+<!-- more -->
+
+<h3>了解文件夹目录及文件类型</h3>
+
+<p>首先了解一下编译目录下的文件夹的作用及存放的文件类型。   </p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">tree -C /home/rpmbuild/rpmbuild/
+</code></pre></div>
+<p>输出内容如下</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">tree
+    /home/rpmbuild/rpmbuild/  
+        ├── BUILD    
+        ├── BUILDROOT   
+        ├── RPMS  
+        │   ├── athlon   
+        │   ├── geode  
+        │   ├── i386  
+        │   ├── i686  
+        │   ├── noarch  
+        │   └── x86_64   
+        ├── SOURCES   
+        ├── SPECS   
+        └── SRPMS   
+</code></pre></div>
+<p>说明
+<code>
+    文件夹   存放的文件     
+    BUILD   源代码数据    
+    RPMS   封装好的 RPM 包按平台放到指定的文件夹 *.rpm 包    
+    SOURCES  源代码数据文件    
+    SPECS  封装源码包的脚本文件*.spec 文件    
+    SRPMS 封装好后,系统会把封装的脚本文件生成一个 *.src.rpm 包    
+</code></p>
+
+<h1>编写*.spec 文件</h1>
+
+<p>现在我们开始编写一个*.spec 文件。<br>
+sepc 文件是主要的将 SRPM 编译成 RPM 的设定档,它的基本规则为:    </p>
+
+<ul>
+<li>整个档案的开头以 Summary 为开始,这部分的设定都是最基础的说明内容。<br></li>
+<li>然后每个不同的段落之间,都以%来作为开头,定义源代码打包封装的内容,例如%prep 与%install。</li>
+</ul>
+
+<p>该文件整体信息如下</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">    Summary:主要的套件说明;    
+    Name:这个就是套件的名称;    
+    Version:这个是套件的版本信息;    
+    Release:这个是该版本打包的次数说明;   
+    Copyright:这个套件的授权模式,我們是使用 GPL 啦!    
+    Group:这个套件的开发团体名称;   
+    Source:这个套件的来源,即源代码目录地址!    
+    Url:这个套件源代码的主要官方网站;    
+    Packager:这个套件是由谁打包的    
+    Vender:开发的厂商;   
+    ExclusiveArch:这个是说明这个套件的实话安裝的硬件,通常默认为 i386   
+    Requires:该套件所依赖的软件包    
+</code></pre></div>
+<p>定义源代码封装的信息</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">    源码包   
+        |–定义属性 | 使用 rpm -qi package 可查看得到的属性    
+        |–源码包封装 |    
+        |–%prep   
+        | 安装前的要求。即在尚未进行设定或安装之前,检查需   
+        要进行的准备工作是否满足需要。prep 就是 prepare 的简写。该部分主要的工作事项有:   
+        查找套机所需要的目录是否已经存在;事先建立套件所需要的目录,或者事先需要进行的任   
+        务;如果待安装的 linux 系统内已经有安装的时候可能会被覆盖掉的档案时,那么就必须   
+        要进行备份的工作   
+        |—%setup     
+        |   
+        该段落就是我们 Tarball 源码中的那个 Makefile 档  
+        案。所以就是执行./config 之类的设定文档。如果需要自己增加参数,就可以在这个地方   
+        加入自己的设定值参数。如果没有这方面的需要,则可以不需要编写内容   
+        |–%build   
+        |  
+        编译。通过 make 编译成为可执行的程序   
+        |–%install  
+        |  
+        模拟安装。编译完成之后,就需要安装。安装就是写  
+        在这里,类似于 tarball 里面 make install 的意思  
+        |–%clean  
+        |–%file  
+        要写到这里  
+        清除临时文件 和 垃圾文件  
+        |   
+        定义安装 (真正安装软件)。这个套件需要安装的文件都需  
+        |
+        | 使用 rpm -q –scripts package 可查看得到的属性   
+        |–scriptlets   
+        |–%pre   
+        |   
+        |–%post   
+        |–%preun   
+        安装前运行的脚本   
+        |    
+        |   
+        |–%postun   
+        安装后运行的脚本   
+        卸载前运行的脚本   
+        卸载前运行的脚本   
+        |   
+        |–%description   
+        |–%changelog   
+        |  
+        |  
+        软件包的描述信息,将套件做一个简短的说明   
+        软件包的日志,更新信息   
+        |–RPM 签名   
+</code></pre></div>
+<p>由于现在开源软件的tar.gz或者tar.bz2源码包里普遍都有软件作者编写好的一个模板.spec配置文件。<br>
+因此我们就不需要手动自己创建该文件，直接修改作者提供的.spec文件即可。</p>
+
+<p>接下来，我们以ethtool软件为例，来演示一下该软件的RPM包编译过程。</p>
+
+<h1>开始编译</h1>
+
+<h2>下载ethtool源码包</h2>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">wget http://www.kernel.org/pub/software/network/ethtool/ethtool-2.6.37.tar.gz
+</code></pre></div>
+<p>输出内容如下</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">    ....  
+    2012-02-15 22:00:45 http://www.kernel.org/pub/software/network/ethtool/ethtool-2.6.37.tar.gz   
+    2012-02-15 22:00:47 (128 KB/s)已保存;ethtool-2.6.37.tar.gz [183975/183975])
+</code></pre></div>
+<h2>解压该软件包，获取.spec文件</h2>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">tar xvzf ethtool-2.6.37.tar.gz
+<span class="nb">cd </span>ethtool-2.6.37
+ls *.spec
+ethtool.spec
+</code></pre></div>
+<p>拷贝该文件到编译目录/home/rpmbuild/rpmbuild/SPECS</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">cp ethtool.spec  /home/rpmbuild/rpmbuild/SPECS
+</code></pre></div>
+<p>拷贝ethtool源文件到编译目录/home/rpmbuild/rpmbuild/SOURCES</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">cp ethtool-2.6.37.tar.gz  /home/rpmbuild/rpmbuild/SOURCES
+</code></pre></div>
+<h2>查看ethtool.spec文件</h2>
+
+<p>看是否有需要修改的内容</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh"><span class="nb">cd</span> /home/rpmbuild/rpmbuild/SPECS
+vi ethtool.spec
+</code></pre></div>
+<p>编辑内容如下</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">    Name : ethtool  
+    Version : 2.6.37   
+    Release : 1   
+    Group : Utilities   
+    Summary : A tool for setting ethernet parameters  
+    License : GPL   
+    URL : http://sourceforge.net/projects/gkernel/   
+    Buildroot : %{_tmppath}/%{name}-%{version}   
+    Source : %{name}-%{version}.tar.gz   
+    %description   
+    Ethtool is a small utility to get and set values from your your ethernet
+    controllers. Not all ethernet drivers support ethtool, but it is getting
+    better.   
+    %prep   
+    %setup -q  
+    %build   
+    CFLAGS=${RPM_OPT_FLAGS} ./configure prefix=/usr mandir=%{_mandir}   
+    make  
+    %install  
+    make install DESTDIR=${RPM_BUILD_ROOT}   
+    %files  
+    %defattr(-,root,root)   
+    /usr/sbin/ethtool  
+    %{_mandir}/man8/ethtool.8*   
+    %doc AUTHORS COPYING INSTALL NEWS README ChangeLog   
+    %changelog  
+</code></pre></div>
+<p>提示：通常需要修改的是Source变量，其他的为默认值即可。</p>
+
+<h2>使用 rpmbuild 进行打包</h2>
+
+<p>编译.spec脚本终于完成了,我们再次使用 rpmbuild 来编译软件包。</p>
+
+<h3>rpmbuild命令选项</h3>
+<div class="highlight"><pre><code class="language-text" data-lang="text">rpmbuild -b[...] specfile 的参数
+
+- -bp 对%prep 进行检测
+- -bc 对%build 进行检测
+- -bi 对%install 进行检测
+- -bb 只建立 2 进制代码包
+- -bs 只建立源代码包
+- -ba 把以上的过程全部运行一次
+</code></pre></div>
+<p>建议以下面的命令顺序对.spec配置文件以此进行测试，并最终编译</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">rpmbuild -bp ethtool.spec
+rpmbuild -bc ethtool.spec
+rpmbuild -bi ethtool.spec
+</code></pre></div>
+<p>若以上三个命令返回值为0，则说明以上编译测试命令运行成功，可以进行真正的软件包编译工作运行。
+以下命令即可生成rpm软件包。</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">rpmbuild -ba ethtool.spec
+</code></pre></div>
+<p>执行过程信息</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh"><span class="nb">cd</span> /home/rpmbuild/rpmbuild/BUILD
+<span class="nb">cd </span>ethtool-2.6.37
+/bin/rm -rf /home/rpmbuild/rpmbuild/BUILDROOT/ethtool-2.6.37-1.x86_64
+<span class="nb">exit </span>0
+</code></pre></div>
+<h2>查看RPMS目录下生成的rpm软件包</h2>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">ls ../RPMS/x86_64/
+</code></pre></div>
+<p>ethtool-2.6.37-1.x86_64.rpm
+软件包生成后，即可使用rpm命令查询该rpm包的详细信息</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">rpm -qpi ethtool-2.6.37-1.x86_64.rpm
+</code></pre></div>
+<p>列出 RPM 软件包的描述信息
+<code>
+    Name : ethtool Relocations: (not relocatable)   
+    Version : 2.6.37 Vendor: (none)    
+    Release : 1 Build Date: 2012年02月15日 星期三 22时12分22秒   
+    Install Date: (not installed) Build Host: localhost.localdomain   
+    Group : Utilities Source RPM: ethtool-2.6.37-1.src.rpm   
+    Size : 269404 License: GPL   
+    Signature : (none)   
+    URL : http://sourceforge.net/projects/gkernel/   
+    Summary : A tool for setting ethernet parameters   
+    Description :   
+    Ethtool is a small utility to get and set values from your your ethernet
+    controllers. Not all ethernet drivers support ethtool, but it is getting
+    better. If your ethernet driver doesn&#39;t support it, ask the maintainer to
+    write support it&#39;s not hard!
+</code></p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">rpm -qpl ethtool-2.6.37-1.x86_64.rpm
+</code></pre></div>
+<p>列出 RPM 软件包内的文件信息</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">    /usr/sbin/ethtool  
+    /usr/share/doc/ethtool-2.6.37   
+    /usr/share/doc/ethtool-2.6.37/AUTHORS   
+    /usr/share/doc/ethtool-2.6.37/COPYING   
+    /usr/share/doc/ethtool-2.6.37/ChangeLog   
+    /usr/share/doc/ethtool-2.6.37/INSTALL  
+    /usr/share/doc/ethtool-2.6.37/NEWS  
+    /usr/share/doc/ethtool-2.6.37/README   
+    /usr/share/man/man8/ethtool.8.gz  
+</code></pre></div>
+<h2>使用yum命令安装该软件，并测试该软件</h2>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">yum localinstall ethtool-2.6.37-1.x86_64.rpm
+</code></pre></div>
+<p>安装成功后通过root用户使用该命令查看网卡的相关信息</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">su
+ethtool eth0
+</code></pre></div>
+<p>输出信息如下：</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">    Settings for eth0:  
+    Supported ports: [ TP ]   
+    Supported link modes: 10baseT/Half 10baseT/Full   
+    100baseT/Half 100baseT/Full   
+    1000baseT/Full  
+    Supports auto-negotiation: Yes   
+    Advertised link modes: 10baseT/Half 10baseT/Full   
+    100baseT/Half 100baseT/Full  
+    1000baseT/Full  
+    Advertised pause frame use: No  
+    Advertised auto-negotiation: Yes   
+    Speed: 1000Mb/s   
+    Duplex: Full   
+    Port: Twisted Pair   
+    PHYAD: 0   
+    Transceiver: internal   
+    Auto-negotiation: on  
+    MDI-X: Unknown  
+    Supports Wake-on: umbg  
+    Wake-on: d  
+    Link detected: yes  
+</code></pre></div>
+<p>由上可知该命令正常输出网卡的相关信息，故说明该软件包安装成功。</p>
+
+<hr>
+
+<p>作者：chris hill<br>
+微博：<a href="http://www.weibo.com/weittor">@翻滚的蜗牛blog</a></p>
+
+    </article>
+    <!-- Duoshuo Comment BEGIN -->
+    <div id="comments">
+        <div class="ds-thread" data-thread-key="/rpm-packages-compiled-guide-v1-0"  data-title="RPM软件包编译指南v1.0 - 翻滚的蜗牛"></div>
+    </div>
+<!-- Duoshuo Comment END -->
+</div>
+
+    </div>
+</div>
+<footer class="site-footer">
+
+    <div class="wrap">
+        <div class="footer-col-1 column">
+            <div class="github">
+                <!-- <span class="icon github"> -->
+                <svg version="1.1" class="github-icon-svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                    viewBox="0 0 16 16" enable-background="new 0 0 16 16" xml:space="preserve">
+                    <path fill-rule="evenodd" clip-rule="evenodd" fill="#000" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761
+                    c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32
+                    c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472
+                    c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037
+                    C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65
+                    c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261
+                    c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082
+                    c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129
+                    c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/>
+                </svg>
+                <!-- </span> -->
+            </div>
+            <a href="https://github.com/taizilongxu">
+                Fork form Hackerxu
+            </a>
+        </div>
+        <div class="footer-col-2">
+            <p>© 2010 - 2014 by <font style="color:#f44336">❤ </font> <a href="http://github.com/weittor">chris.hill</a></p>
+        </div>
+        <!-- <div class="footer-col-3 column">
+      <p class="text">Python,Linux,DevOps,Cloud</p>
+    </div> -->
+    </div>
+    <div class="scroll-top"><i class="fa fa-arrow-circle-up"></i></div>
+</footer>
+
+
+<!-- mathjax -->
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}
+});
+</script>
+<script type="text/javascript"
+src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<!-- highlight -->
+<script src="/js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<!-- pleace change it! -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"weittor"};
+(function() {
+ var ds = document.createElement('script');
+ ds.type = 'text/javascript';ds.async = true;
+ ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+ ds.charset = 'UTF-8';
+ (document.getElementsByTagName('head')[0]
+  || document.getElementsByTagName('body')[0]).appendChild(ds);
+ })();
+</script>
+<!-- top-scrooll -->
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/3.0.4/jquery.imagesloaded.js"></script>
+<script type="text/javascript">
+
+$(window).scroll(function() {
+
+        if($(this).scrollTop() > 100) {
+        $('.scroll-top').fadeIn(200);
+        } else {
+        $('.scroll-top').fadeOut(200);
+        }
+        });
+
+$('.scroll-top').bind('click', function(e) {
+        e.preventDefault();
+        $('body,html').animate({scrollTop:0},200);
+        });
+</script>
+</body>
+</html>

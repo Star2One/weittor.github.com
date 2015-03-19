@@ -1,2 +1,1 @@
-# weittor.github.com
-blog.weittor.com
+weibo: <http://www.weibo.com/weittor>

@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!-- 手机端页面 -->
+<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>15个常用的tcpdump命令</title>
+<link rel="shortcut icon" href=" /img/github.ico"/>
+<link rel="bookmark" href="/img/github.ico"/>
+<meta name="viewport" content="width=device-width">
+<meta name="description" content="Python,Linux,DevOps,Cloud">
+<link rel="canonical" href="http://blog.weittor.com/15-tcpdump-command-examples.html">
+<!-- Custom CSS -->
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/css/github.css">
+<!-- 返回顶部 -->
+<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+<script src="/js/jquery.js"></script>
+<script src="/js/function_about.js"></script>
+<!--  -->
+</head>
+
+<body>
+<header class="site-header">
+  <meta name="baidu-site-verification" content="93L8YEZrTw" />
+    <div class="wrap">
+        <a class="site-title" href="/"><h1><strong> <font style="color:#39B3D7" >翻</font><font style="color:#ED9C28">滚</font><font style="color:#47A447">的</font><font style="color:#D9534F">蜗</font><font style="color:#3276B1">牛</font>
+                </strong>
+        </h1></a>
+        <nav class="site-nav">
+            <a href="#" class="menu-icon">
+                <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                    viewBox="0 0 18 15" enable-background="new 0 0 18 15" xml:space="preserve">
+                    <path fill="#505050" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0
+                    h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+                    <path fill="#505050" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484
+                    h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+                    <path fill="#505050" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0
+                    c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+                </svg>
+            </a>
+            <div class="trigger">
+                
+                
+                <a class="page-link" href="/about/">About</a>
+                
+                
+                
+                <a class="page-link" href="/archive/">Archive</a>
+                
+                
+                
+                <a class="page-link" href="/categories/">Categories</a>
+                
+                
+                
+                <a class="page-link" href="/tags/">Tags</a>
+                
+                
+                
+                <a class="page-link" href="/atom.xml">Rss</a>
+                
+                
+            </div>
+        </nav>
+    </div>
+
+</header>
+
+<div class="page-content">
+    <div class="wrap">
+        <div class="post">
+    <header class="post-header">
+        <h1><a href="/15-tcpdump-command-examples.html">15个常用的tcpdump命令</a></h1>
+        <p class="meta"><i class="fa fa-calendar"></i> 2013-11-19&nbsp&nbsp&nbsp<i class="fa fa-folder-open"></i>&nbsp&nbsp&nbsp<i class="fa fa-tags"></i>&nbsp&nbsp<a href="/tags/#Linux">Linux</a></p>
+    </header>
+    <article class="post-content">
+        <hr>
+
+<p>tcpdump作为网管必备利器之一，是网络分析排错的重要工具。</p>
+
+<p>下面为大家介绍15个常用的tcpdump命令。</p>
+
+<h1>tcpdump命令举例</h1>
+
+<p>1.分析特定网卡的网络流量</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">tcpdump -i eth0
+</code></pre></div>
+<p>输出</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">listening on eth0, link-type EN10MB (Ethernet), capture size 65535 bytes
+21:23:58.456673 IP WeittorLab.ssh &gt; 192.168.1.110.51335: Flags [P.], seq 3194195677:3194195873, ack 3364749995, win 141, length 196
+21:23:58.456721 IP WeittorLab.ssh &gt; 192.168.1.110.51335: Flags [P.], seq 196:248, ack 1, win 141, length 52
+21:23:58.457461 IP WeittorLab.51407 &gt; 192.168.1.1.domain: 64393+ PTR? 110.1.168.192.in-addr.arpa. (44)
+3 packets captured
+47 packets received by filter
+14 packets dropped by kernel
+</code></pre></div>
+<!-- more -->
+
+<p>2.捕获指定数量的数据</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">tcpdump -c <span class="m">3</span> -i eth0
+</code></pre></div>
+<p>输出</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">listening on eth0, link-type EN10MB (Ethernet), capture size 65535 bytes
+21:24:43.098599 IP WeittorLab.ssh &gt;&gt; 192.168.1.110.51335: Flags [P.], seq 3194197349:3194197545, ack 3364750583, win 141, length 196
+21:24:43.098645 IP WeittorLab.ssh &gt;&gt; 192.168.1.110.51335: Flags [P.], seq 196:248, ack 1, win 141, length 52
+21:24:43.099396 IP WeittorLab.39700 &gt;&gt; 192.168.1.1.domain: 23487+ PTR? 110.1.168.192.in-addr.arpa. (44)
+3 packets captured
+43 packets received by filter
+10 packets dropped by kernel
+</code></pre></div>
+<p>3.显示ASCII格式的数据包</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">tcpdump -A -i eth0
+</code></pre></div>
+<p>输出</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">listening on eth0, link-type EN10MB (Ethernet), capture size 96 bytes
+12:13:59.813814 IP weittor-inc.com.ssh &gt; 192.168.10.27.51524: P 3515008196:3515008392(196) ack 1859193307 win 30
+E.....@.@...
+@........D....n. .P... D...}.ySL.....U.......:.=.+Z5.My
+|.{G..T.....
+12:13:59.814336 IP weittor-inc.com.7118 &gt; 210-inc.com.domain: 5268+ PTR? 27.10.168.192.in-addr.arpa. (44)
+E..H%&lt;@.@.|.
+@.
+ C....5.4...............27.10.168.192.in-addr.arpa.....
+2 packets captured
+9 packets received by filter
+0 packets dropped by kernel
+</code></pre></div>
+<p>4.显示十六进制和ASCII格式的数据包</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">tcpdump -XX -i eth0
+</code></pre></div>
+<p>输出</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">listening on eth0, link-type EN10MB (Ethernet), capture size 96 bytes
+12:14:38.980356 IP weittor-inc.com.ssh&gt;&gt; 192.168.10.27.51524: P 3515010100:3515010296(196) ack &gt;1859194295 win 30
+     0x0000: 0cda 41af 2eeb 14fe b5d5 37d9 0800 4510 ..A.......7...E.
+     0x0010: 00ec 1ced 4000 4006 fda9 0a0a 4098 c0a8 ....@.@.....@...
+     0x0020: 141b 0016 c944 d182 cc34 6ed1 0db7 5018 .....D...4n...P.
+     0x0030: 001e 2044 0000 a7de 751f b39b 2bc9 2bb3 ...D....u...+.+.
+     0x0040: b9cb c5d8 d45d a0aa c079 1a11 d612 e8b3 .....]...y......
+     0x0050: 7504 7087 9f6b 2c95 f6a5 4734 7076 4d2f u.p..k,...G4pvM/
+12:14:38.980881 IP weittor-inc.com.56945&gt;&gt; 210-inc.com.domain: 27553+ PTR? 27.10.168.192.in-addr.arpa. (44)
+     0x0000: b63e 9b30 e26e 14fe b5d5 37d9 0800 4500 .&gt;.0.n....7...E.
+     0x0010: 0048 be39 4000 4011 e3ed 0a0a 4098 0a0a .H.9@.@.....@...
+     0x0020: 43d2 de71 0035 0034 98c3 6ba1 0100 0001 C..q.5.4..k.....
+     0x0030: 0000 0000 0000 0232 3702 3230 0331 3638 .......27.20.168
+     0x0040: 0331 3932 0769 6e2d 6164 6472 0461 7270 .192.in-addr.arp
+     0x0050: 6100 000c 0001 a.....
+2 packets captured
+10 packets received by filter
+0 packets dropped by kernel
+</code></pre></div>
+<p>5.将捕获的数据包信息重定向到特定的文件中</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">tcpdump -w 11192013.pcap -i eth0
+</code></pre></div>
+<p>输出</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">tcpdump: listening on eth0, link-type EN10MB (Ethernet), capture size 65535 bytes
+80 packets captured
+80 packets received by filter
+0 packets dropped by kernel
+</code></pre></div>
+<p>6.读取指定的数据包文件</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">tcpdump -tttt -r 22192013.pcap
+</code></pre></div>
+<p>输出</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">2013-11-19 12:18:57.534109 IP weittor-inc.com.49302 &gt; 6-85.com.4506: Flags [S], seq 2707142348, win &gt;14600, options [mss 1460,sackOK,TS val 86058098 ecr 0,nop,wscale 7], length 0
+2013-11-19 12:18:57.535263 IP weittor-inc.com.4506 &gt; 6-93.com.49302: Flags [R.], seq 0, ack 2707142349, win 0, length 0
+2013-11-19 12:18:57.656032 ARP, Request who-has 67-221.bjyz.dajie-inc.com tell , length 46
+</code></pre></div>
+<p>7.禁用DNS解析</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">tcpdump -n  -c <span class="m">3</span> -i eth0
+</code></pre></div>
+<p>输出</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">listening on eth0, link-type EN10MB (Ethernet), capture size 65535 bytes
+21:26:29.310735 IP 192.168.1.100.22 &gt; 192.168.1.110.51335: Flags [P.], seq 3194203929:3194204125, ack 3364751879, win 141, length 196
+21:26:29.310986 IP 192.168.1.100.22 &gt; 192.168.1.110.51335: Flags [P.], seq 196:376, ack 1, win 141, length 180
+21:26:29.311063 IP 192.168.1.100.22 &gt; 192.168.1.110.51335: Flags [P.], seq 376:540, ack 1, win 141, length 164
+3 packets captured
+4 packets received by filter
+0 packets dropped by kernel
+</code></pre></div>
+<p>8.以适合可读的时间戳格式显示</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">tcpdump -n -tttt -i eth0
+</code></pre></div>
+<p>输出</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">listening on eth0, link-type EN10MB (Ethernet), capture size 65535 bytes
+2013-11-19 21:27:11.116837 IP 192.168.1.100.22 &gt; 192.168.1.110.51335: Flags [P.], seq 3194889605:3194889801, ack 3364753871, win 141, length 196
+2013-11-19 21:27:11.117191 IP 192.168.1.100.22 &gt; 192.168.1.110.51335: Flags [P.], seq 196:392, ack 1, win 141, length 196
+2013-11-19 21:27:11.117317 IP 192.168.1.100.22 &gt; 192.168.1.110.51335: Flags [P.], seq 392:556, ack 1, win 141, length 164
+3 packets captured
+4 packets received by filter
+0 packets dropped by kernel
+</code></pre></div>
+<p>9.只读取大于N bytes的数据包信息</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">tcpdump -w g_1024.pcap greater 1024
+</code></pre></div>
+<p>10.只捕获特定协议的数据包</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">tcpdump -i eth0 arp
+</code></pre></div>
+<p>输出</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">listening on eth0, link-type EN10MB (Ethernet), capture size 65535 bytes
+21:28:14.934292 ARP, Request who-has 192.168.1.1 tell 192.168.1.102, length 46
+21:28:14.966837 ARP, Request who-has 192.168.1.1 tell 192.168.1.102, length 46
+21:28:15.000800 ARP, Request who-has 192.168.1.1 tell 192.168.1.102, length 46
+3 packets captured
+5 packets received by filter
+0 packets dropped by kernel
+</code></pre></div>
+<p>11.只读取小于N bytes大小的数据包</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">tcpdump -w l_1024.pcap less 1024
+</code></pre></div>
+<p>12.捕获特定端口的数据包</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">tcpdump -i eth0 port 22
+</code></pre></div>
+<p>13.捕获特定目的地址和端口的数据包</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">tcpdump -w weittor-packets.pcap -i eth0 dst 10.191.14.16 and port 22
+</code></pre></div>
+<p>14.捕获两台服务器之间的TCP协议数据包</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">tcpdump -i eth0 tcp and dst 192.168.1.100 and src 192.168.1.110 tcp
+</code></pre></div>
+<p>15.排除特定协议的数据包</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">tcpdump -i eth0 not arp and not rarp
+</code></pre></div>
+<h1>参考资料</h1>
+
+<p><a href="http://www.thegeekstuff.com/2010/08/tcpdump-command-examples/">thegeekstuff</a></p>
+
+<hr>
+
+<p>作者：chris hill</p>
+
+<p>微博：<a href="http://www.weibo.com/weittor">@翻滚的蜗牛blog</a></p>
+
+    </article>
+    <!-- Duoshuo Comment BEGIN -->
+    <div id="comments">
+        <div class="ds-thread" data-thread-key="/15-tcpdump-command-examples"  data-title="15个常用的tcpdump命令 - 翻滚的蜗牛"></div>
+    </div>
+<!-- Duoshuo Comment END -->
+</div>
+
+    </div>
+</div>
+<footer class="site-footer">
+
+    <div class="wrap">
+        <div class="footer-col-1 column">
+            <div class="github">
+                <!-- <span class="icon github"> -->
+                <svg version="1.1" class="github-icon-svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                    viewBox="0 0 16 16" enable-background="new 0 0 16 16" xml:space="preserve">
+                    <path fill-rule="evenodd" clip-rule="evenodd" fill="#000" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761
+                    c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32
+                    c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472
+                    c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037
+                    C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65
+                    c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261
+                    c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082
+                    c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129
+                    c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/>
+                </svg>
+                <!-- </span> -->
+            </div>
+            <a href="https://github.com/taizilongxu">
+                Fork form Hackerxu
+            </a>
+        </div>
+        <div class="footer-col-2">
+            <p>© 2010 - 2014 by <font style="color:#f44336">❤ </font> <a href="http://github.com/weittor">chris.hill</a></p>
+        </div>
+        <!-- <div class="footer-col-3 column">
+      <p class="text">Python,Linux,DevOps,Cloud</p>
+    </div> -->
+    </div>
+    <div class="scroll-top"><i class="fa fa-arrow-circle-up"></i></div>
+</footer>
+
+
+<!-- mathjax -->
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}
+});
+</script>
+<script type="text/javascript"
+src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<!-- highlight -->
+<script src="/js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<!-- pleace change it! -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"weittor"};
+(function() {
+ var ds = document.createElement('script');
+ ds.type = 'text/javascript';ds.async = true;
+ ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+ ds.charset = 'UTF-8';
+ (document.getElementsByTagName('head')[0]
+  || document.getElementsByTagName('body')[0]).appendChild(ds);
+ })();
+</script>
+<!-- top-scrooll -->
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/3.0.4/jquery.imagesloaded.js"></script>
+<script type="text/javascript">
+
+$(window).scroll(function() {
+
+        if($(this).scrollTop() > 100) {
+        $('.scroll-top').fadeIn(200);
+        } else {
+        $('.scroll-top').fadeOut(200);
+        }
+        });
+
+$('.scroll-top').bind('click', function(e) {
+        e.preventDefault();
+        $('body,html').animate({scrollTop:0},200);
+        });
+</script>
+</body>
+</html>

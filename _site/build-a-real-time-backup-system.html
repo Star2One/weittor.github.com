@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!-- 手机端页面 -->
+<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>通过rsync+inotify搭建实时备份系统</title>
+<link rel="shortcut icon" href=" /img/github.ico"/>
+<link rel="bookmark" href="/img/github.ico"/>
+<meta name="viewport" content="width=device-width">
+<meta name="description" content="Python,Linux,DevOps,Cloud">
+<link rel="canonical" href="http://blog.weittor.com/build-a-real-time-backup-system.html">
+<!-- Custom CSS -->
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/css/github.css">
+<!-- 返回顶部 -->
+<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+<script src="/js/jquery.js"></script>
+<script src="/js/function_about.js"></script>
+<!--  -->
+</head>
+
+<body>
+<header class="site-header">
+  <meta name="baidu-site-verification" content="93L8YEZrTw" />
+    <div class="wrap">
+        <a class="site-title" href="/"><h1><strong> <font style="color:#39B3D7" >翻</font><font style="color:#ED9C28">滚</font><font style="color:#47A447">的</font><font style="color:#D9534F">蜗</font><font style="color:#3276B1">牛</font>
+                </strong>
+        </h1></a>
+        <nav class="site-nav">
+            <a href="#" class="menu-icon">
+                <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                    viewBox="0 0 18 15" enable-background="new 0 0 18 15" xml:space="preserve">
+                    <path fill="#505050" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0
+                    h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+                    <path fill="#505050" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484
+                    h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+                    <path fill="#505050" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0
+                    c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+                </svg>
+            </a>
+            <div class="trigger">
+                
+                
+                <a class="page-link" href="/about/">About</a>
+                
+                
+                
+                <a class="page-link" href="/archive/">Archive</a>
+                
+                
+                
+                <a class="page-link" href="/categories/">Categories</a>
+                
+                
+                
+                <a class="page-link" href="/tags/">Tags</a>
+                
+                
+                
+                <a class="page-link" href="/atom.xml">Rss</a>
+                
+                
+            </div>
+        </nav>
+    </div>
+
+</header>
+
+<div class="page-content">
+    <div class="wrap">
+        <div class="post">
+    <header class="post-header">
+        <h1><a href="/build-a-real-time-backup-system.html">通过rsync+inotify搭建实时备份系统</a></h1>
+        <p class="meta"><i class="fa fa-calendar"></i> 2013-06-29&nbsp&nbsp&nbsp<i class="fa fa-folder-open"></i>&nbsp&nbsp&nbsp<i class="fa fa-tags"></i>&nbsp&nbsp<a href="/tags/#Linux">Linux</a></p>
+    </header>
+    <article class="post-content">
+        <hr>
+
+<h1>rsync介绍</h1>
+
+<h2>优点</h2>
+
+<p>安全性高、备份迅速、支持增量备份。  </p>
+
+<p>rsync可以解决对实时性要求不高的系统数据备份需求。  </p>
+
+<p>例如定期的备份文件服务器数据到远端服务器，对本地磁盘定期做数据镜像等。</p>
+
+<h2>不足</h2>
+
+<p>1) rsync同步数据时，需要扫描所有文件后进行比对，进行差量传输。  </p>
+
+<p>如果文件数量达到了百万甚至千万量级，扫描所有文件将是非常耗时的。  </p>
+
+<p>而且正在发生变化的往往是其中很少的一部分，这是非常低效的方式。  </p>
+
+<p>2) rsync不能实时的去监测、同步数据。  </p>
+
+<p>虽然它可以通过linux守护进程的方式进行触发同步，但是两次触发动作一定会有时间差。  </p>
+
+<p>这样就导致了服务端和客户端数据可能出现不一致，无法在应用故障时完全的恢复数据。</p>
+
+<h1>inotify介绍</h1>
+
+<p>inotify 是一种强大的、细粒度的、异步的文件系统事件监控机制。  </p>
+
+<p>通过Inotify可以监控文件系统中添加、删除，修改、移动等各种细微事件，利用这个内核接口，第三方软件就可以监控文件系统下文件的各种变化情况，而inotify-tools就是这样的一个第三方软件。</p>
+
+<ul>
+<li>原理</li>
+</ul>
+
+<p>inotify可以监控文件系统的各种变化，当文件有任何变动时，就触发rsync同步，通过rsync+inotify组合可以解决同步数据的实时性问题。</p>
+
+<h1>应用案例</h1>
+
+<h2>案例分析</h2>
+
+<p>通过rsync+inotify将web服务器的网页文件实时备份到远程备份服务器上。</p>
+
+<ul>
+<li><p>系统环境</p>
+
+<ul>
+<li>WEB服务器 – LAMP 192.168.122.88<br></li>
+<li>备份服务器 – LAMP-backup 192.168.122.89</li>
+</ul></li>
+</ul>
+
+<h2>安装配置</h2>
+
+<h3>在LAMP节点上安装inotify工具inotify-tools</h3>
+
+<h4>确定内核支持inotify特性</h4>
+
+<p>1)内核达到2.6.13版本以上</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">uname -r
+</code></pre></div>
+<p>输出：<code>2.6.32-220.el6.x86_64</code></p>
+
+<p>2)判断内核是否编译支持inotify特性</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">ll /proc/sys/fs/inotify
+</code></pre></div>
+<p>输出：</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">    总用量 0
+       -rw-r–r– 1 root root 0 6月  29 15:07 max_queued_events
+       -rw-r–r– 1 root root 0 6月  29 15:07 max_user_instances
+       -rw-r–r– 1 root root 0 6月  29 15:07 max_user_watches
+</code></pre></div>
+<p>如果有上面三项输出，表示系统已经默认支持inotify，接着就可以开始安装inotify-tools了。</p>
+
+<!-- more -->
+
+<h4>下载inotify-tools工具</h4>
+
+<p><a href="http://inotify-tools.sourceforge.net">http://inotify-tools.sourceforge.net</a></p>
+
+<h4>编译安装</h4>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">tar zxvf inotify-tools-3.14.tar.gz 
+<span class="nb">cd </span>inotify-tools-3.14
+./configure
+make
+make install
+</code></pre></div>
+<p>确认安装成功</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">ll /usr/local/bin/inotifywa*
+</code></pre></div>
+<p>输出:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">    -rwxr-xr-x 1 root root 38630 6月  26 14:22 /usr/local/bin/inotifywait
+    -rwxr-xr-x 1 root root 40401 6月  26 14:22 /usr/local/bin/inotifywatch
+</code></pre></div>
+<p>inotify-tools安装完成后，会生成inotifywait和inotifywatch两个指令，其中，inotifywait用于等待文件或文件集上的一个特定事件，它可以监控任何文件和目录设置，并且可以递归地监控整个目录树。  </p>
+
+<p>inotifywatch用于收集被监控的文件系统统计数据，包括每个inotify事件发生多少次等信息。</p>
+
+<h3>在LAMP节点和LAMP-bakcup节点安装rsync</h3>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">yum install rsync
+</code></pre></div>
+<h3>在LAMP-backup节点配置rsync</h3>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">cat /etc/rsyncd.conf
+</code></pre></div>
+<p>内容如下</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">    uid = nobody
+    gid = nobody
+    use chroot = no
+    max connections = 10
+    strict modes = yes
+    pid file = /var/run/rsyncd.pid
+    lock file = /var/run/rsync.lock
+    log file = /var/log/rsyncd.log
+    [weittor-backup]
+    path = /weittor-backup
+    comment = weittor web file
+    ignore errors
+    read only = no
+    write only = no
+    hosts allow = *
+    hosts deny = 192.168.100.100
+    list = false
+    uid = root
+    gid = root
+    auth users =  backup
+    secrets file = /etc/server.pass
+</code></pre></div>
+<p>创建密码验证文件</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">vim /etc/server.pass
+</code></pre></div>
+<p>内容如下：</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">backup:weittor123
+</code></pre></div>
+<p>启动rsync守护进程，接着将rsync服务加入到自启动文件中：</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh"><span class="nb">echo</span>  <span class="s2">&quot;/usr/bin/rsync --daemon&quot;</span> &gt;&gt;/etc/rc.local
+</code></pre></div>
+<h3>配置LAMP节点</h3>
+
+<p>配置内容发布节点的主要就是将LAMP节点的/var/www/html网页目录的内容实时同步到LAMP-backup服务节点上可以通过一个脚本实现该功能</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">cat /etc/init.d/inotify-rsync.sh
+</code></pre></div>
+<p>内容如下：</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">    <span class="c">#!/bin/bash</span>
+    <span class="nv">host1</span><span class="o">=</span>192.168.122.89
+    <span class="nv">src</span><span class="o">=</span>/var/www/html/
+    <span class="nv">dst1</span><span class="o">=</span>weittor-backup
+    <span class="nv">user1</span><span class="o">=</span>backup
+
+    /usr/local/bin/inotifywait -mrq --timefmt <span class="s1">&#39;%d/%m/%y %H:%M&#39;</span> --format <span class="s1">&#39;%T %w%f%e&#39;</span> -e close_write,delete,create,attrib <span class="nv">$src</span> <span class="se">\</span>
+    <span class="p">|</span> <span class="k">while</span> <span class="nb">read </span>files
+      <span class="k">do</span>
+      /usr/bin/rsync -vzrtopg --delete --progress  <span class="nv">$src</span> <span class="nv">$user1</span>@<span class="nv">$host1</span>::<span class="nv">$dst1</span> --password-file<span class="o">=</span>/etc/weittor-backup.pass
+      <span class="nb">echo</span> <span class="s2">&quot;${files} was rsynced&quot;</span> &gt;&gt;/tmp/rsync.log 2&gt;<span class="p">&amp;</span>1
+     <span class="k">done</span>
+</code></pre></div>
+<p>脚本解释如下：</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">    –timefmt：指定时间的输出格式  
+
+    –format：指定变化文件的详细信息
+</code></pre></div>
+<p>这两个参数一般配合使用，通过指定输出格式，输出类似与：</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">    26/06/13 14:35 /var/www/html/date.txtCREATE was rsynced
+    26/06/13 14:35 /var/www/html/date.txtCLOSE_WRITE,CLOSE was rsynced
+    26/06/13 14:39 /var/www/html/date.txtCLOSE_WRITE,CLOSE was rsynced
+    26/06/13 14:42 /var/www/html/date.txtCLOSE_WRITE,CLOSE was rsynced
+    26/06/13 14:43 /var/www/html/date.txtCLOSE_WRITE,CLOSE was rsynced
+</code></pre></div>
+<p>该脚本通过inotify监控文件目录的变化，进而触发rsync进行同步操作，由于这个过程是一种主动触发操作，通过系统内核完成的，所以，比起那些遍历整个目录的扫描方式，效率要高很多</p>
+
+<p>接着，创建用户名密码验证文件</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">vim /etc/weittor-backup.pass
+</code></pre></div>
+<p>内容如下：weittor123</p>
+
+<p>将该脚本放到/etc/init.d/目录下，然后给定可执行权限，放到后台运行：</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">chmod <span class="m">755</span> /etc/init.d/inotify-rsync.sh 
+/etc/init.d/inotify-rsync.sh  <span class="p">&amp;</span>
+</code></pre></div>
+<p>最后，将此脚本加入系统自启动文件：</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh"><span class="nb">echo</span>  <span class="err">&quot;</span>/etc/init.d/inotify-rsync.sh  &gt;&gt;/etc/rc.local
+</code></pre></div>
+<p>这样就完成了内容发布节点的所有配置工作</p>
+
+<h3>测试rsync+inotify实时同步功能</h3>
+
+<p>所有配置完成后，可以在网页发布节点的/var/www/html/目录下添加、删除或者修改某个文件，然后到LAMP-backup服务节点对应的目录查看文件是否跟随网页发布节点的/var/www/html目录下文件发生变化，如果你看到LAMP-backup节点对应的目录文件跟着LAMP节点目录文件同步变化，那么我们这个业务系统就配置成功了。  </p>
+
+<p>比如：  </p>
+
+<p>在LAMP节点执行</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">date &gt;&gt;/var/www/html/date.txt
+</code></pre></div>
+<p>在LAMP-backup节点查看该文件是否正常同步</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">ls /weittor-bakcup
+</code></pre></div>
+<h1>参考资料</h1>
+
+<p><a href="http://ixdba.blog.51cto.com/2895551/580280">http://ixdba.blog.51cto.com/2895551/580280</a></p>
+
+<hr>
+
+<p>作者：chris hill</p>
+
+<p>微博：<a href="http://www.weibo.com/weittor">@翻滚的蜗牛blog</a></p>
+
+    </article>
+    <!-- Duoshuo Comment BEGIN -->
+    <div id="comments">
+        <div class="ds-thread" data-thread-key="/build-a-real-time-backup-system"  data-title="通过rsync+inotify搭建实时备份系统 - 翻滚的蜗牛"></div>
+    </div>
+<!-- Duoshuo Comment END -->
+</div>
+
+    </div>
+</div>
+<footer class="site-footer">
+
+    <div class="wrap">
+        <div class="footer-col-1 column">
+            <div class="github">
+                <!-- <span class="icon github"> -->
+                <svg version="1.1" class="github-icon-svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                    viewBox="0 0 16 16" enable-background="new 0 0 16 16" xml:space="preserve">
+                    <path fill-rule="evenodd" clip-rule="evenodd" fill="#000" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761
+                    c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32
+                    c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472
+                    c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037
+                    C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65
+                    c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261
+                    c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082
+                    c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129
+                    c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/>
+                </svg>
+                <!-- </span> -->
+            </div>
+            <a href="https://github.com/taizilongxu">
+                Fork form Hackerxu
+            </a>
+        </div>
+        <div class="footer-col-2">
+            <p>© 2010 - 2014 by <font style="color:#f44336">❤ </font> <a href="http://github.com/weittor">chris.hill</a></p>
+        </div>
+        <!-- <div class="footer-col-3 column">
+      <p class="text">Python,Linux,DevOps,Cloud</p>
+    </div> -->
+    </div>
+    <div class="scroll-top"><i class="fa fa-arrow-circle-up"></i></div>
+</footer>
+
+
+<!-- mathjax -->
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}
+});
+</script>
+<script type="text/javascript"
+src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<!-- highlight -->
+<script src="/js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<!-- pleace change it! -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"weittor"};
+(function() {
+ var ds = document.createElement('script');
+ ds.type = 'text/javascript';ds.async = true;
+ ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+ ds.charset = 'UTF-8';
+ (document.getElementsByTagName('head')[0]
+  || document.getElementsByTagName('body')[0]).appendChild(ds);
+ })();
+</script>
+<!-- top-scrooll -->
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/3.0.4/jquery.imagesloaded.js"></script>
+<script type="text/javascript">
+
+$(window).scroll(function() {
+
+        if($(this).scrollTop() > 100) {
+        $('.scroll-top').fadeIn(200);
+        } else {
+        $('.scroll-top').fadeOut(200);
+        }
+        });
+
+$('.scroll-top').bind('click', function(e) {
+        e.preventDefault();
+        $('body,html').animate({scrollTop:0},200);
+        });
+</script>
+</body>
+</html>

@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!-- 手机端页面 -->
+<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>CentOS系统搭建gitolite服务</title>
+<link rel="shortcut icon" href=" /img/github.ico"/>
+<link rel="bookmark" href="/img/github.ico"/>
+<meta name="viewport" content="width=device-width">
+<meta name="description" content="Python,Linux,DevOps,Cloud">
+<link rel="canonical" href="http://blog.weittor.com/set-up-gitolite.html">
+<!-- Custom CSS -->
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/css/github.css">
+<!-- 返回顶部 -->
+<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+<script src="/js/jquery.js"></script>
+<script src="/js/function_about.js"></script>
+<!--  -->
+</head>
+
+<body>
+<header class="site-header">
+  <meta name="baidu-site-verification" content="93L8YEZrTw" />
+    <div class="wrap">
+        <a class="site-title" href="/"><h1><strong> <font style="color:#39B3D7" >翻</font><font style="color:#ED9C28">滚</font><font style="color:#47A447">的</font><font style="color:#D9534F">蜗</font><font style="color:#3276B1">牛</font>
+                </strong>
+        </h1></a>
+        <nav class="site-nav">
+            <a href="#" class="menu-icon">
+                <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                    viewBox="0 0 18 15" enable-background="new 0 0 18 15" xml:space="preserve">
+                    <path fill="#505050" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0
+                    h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+                    <path fill="#505050" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484
+                    h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+                    <path fill="#505050" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0
+                    c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+                </svg>
+            </a>
+            <div class="trigger">
+                
+                
+                <a class="page-link" href="/about/">About</a>
+                
+                
+                
+                <a class="page-link" href="/archive/">Archive</a>
+                
+                
+                
+                <a class="page-link" href="/categories/">Categories</a>
+                
+                
+                
+                <a class="page-link" href="/tags/">Tags</a>
+                
+                
+                
+                <a class="page-link" href="/atom.xml">Rss</a>
+                
+                
+            </div>
+        </nav>
+    </div>
+
+</header>
+
+<div class="page-content">
+    <div class="wrap">
+        <div class="post">
+    <header class="post-header">
+        <h1><a href="/set-up-gitolite.html">CentOS系统搭建gitolite服务</a></h1>
+        <p class="meta"><i class="fa fa-calendar"></i> 2014-05-24&nbsp&nbsp&nbsp<i class="fa fa-folder-open"></i>&nbsp&nbsp&nbsp<i class="fa fa-tags"></i>&nbsp&nbsp<a href="/tags/#Git">Git</a></p>
+    </header>
+    <article class="post-content">
+        <hr>
+
+<p>CentOS系统搭建gitolite服务</p>
+
+<h1>准备工作</h1>
+
+<blockquote>
+<p>客户端IP    192.168.20.26<br>
+服务端IP    192.168.20.120</p>
+</blockquote>
+
+<h1>安装软件</h1>
+
+<h2>服务端执行</h2>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">yum perl-Time-HiRes openssh-server perl 
+yum -y install git
+</code></pre></div>
+<h2>客户端执行</h2>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">yum -y install git
+</code></pre></div>
+<h1>添加用户</h1>
+
+<h2>服务端执行</h2>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">groupadd git
+useradd -g git -m  git
+</code></pre></div>
+<p>设置密码 </p>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">passwd git
+</code></pre></div>
+<!-- more -->
+
+<h1>拷贝公钥</h1>
+
+<p>Gitolite管理的方式是给你一个特殊的仓库，修改，提交，推送到服务器就可以了。<br>
+这个仓库只可以管理员访问，先把管理员的公钥复制到服务器上(可以和Git服务器在同一台服务器上也可以在不同的服务器上)。</p>
+
+<h2>客户端执行</h2>
+
+<p>生成公钥weittor.pub，妥善保管好私钥weittor</p>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nb">cd</span> ~/.ssh/
+ssh-keygen -f weittor
+</code></pre></div>
+<p>拷贝管理员公钥weittor.pub到git服务器上</p>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">ssh-copy-id -i weittor.pub git@192.168.20.120
+</code></pre></div>
+<h1>安装Gitolite</h1>
+
+<h2>服务端执行</h2>
+
+<p>在Git服务器上切换到git用户进行安装。<br>
+切换到git用户</p>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">su - git
+</code></pre></div>
+<p>创建gitolite安装目录</p>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">mkdir bin
+</code></pre></div>
+<p>重命名管理员公钥weittor.pub</p>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">mv ~/.ssh/authorized_keys ~/weittor.pub
+</code></pre></div>
+<p>提示：authorized_keys为前一步通过ssh-copy-id命令传输过来的weittor.pub公钥</p>
+
+<p>从github上获取gitolite最新的源代码</p>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">git clone git://github.com/sitaramc/gitolite.git
+</code></pre></div>
+<p>安装到~/bin目录</p>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">~/gitolite/install -to ~/bin
+</code></pre></div>
+<p>初始化gitolite的git库</p>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">~/bin/gitolite setup -pk ~/weittor.pub
+</code></pre></div>
+<p>安装已经完成了，可以再以管理用户进行测试(前面运行ssh-copy-id的服务器)</p>
+
+<h1>测试</h1>
+
+<h2>客户端执行</h2>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">ssh git@192.168.20.120
+</code></pre></div>
+<p>应该看到类似这样的输出:</p>
+
+<blockquote>
+<p>PTY allocation request failed on channel 0<br>
+hello weittor, this is git@gitserver running gitolite3 v3.5.3.1-13-gb23aed9 on git 1.7.1<br>
+            R W gitolite-admin<br>
+            R W testing<br>
+Connection to 192.168.20.120 closed.   </p>
+</blockquote>
+
+<p>可以把管理仓库克隆下来管理Git服务器</p>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">git clone git@192.168.20.120:gitolite-admin.git
+</code></pre></div>
+<p>要添加用户，只要把用户的公钥复制到这个仓库里的keydir下并以username.pub命名，然后提交并推送到服务器。</p>
+
+<h2>添加用户示例(james)</h2>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nb">cd </span>gitolite-admin
+cp ~/.ssh/james.pub keydir/james.pub
+git add keydir
+git commit -m <span class="s2">&quot;add new user james&quot;</span>
+git push
+</code></pre></div>
+<h2>创建仓库示例</h2>
+
+<p>创建一个名为wt-shell的仓库，james有读写权限</p>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash"><span class="nb">cd </span>gitolite-admin
+vi conf/gitolite.conf
+</code></pre></div>
+<p>添加类似下面这内容进去</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">repo wt-shell    
+    RW+    =   james
+</code></pre></div>
+<blockquote>
+<p>注释：赋予用户james以下权限R(读)、W(写)、+(强制推送)</p>
+</blockquote>
+
+<p>保存，提交并提交到git服务端</p>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">git add conf
+git commit -m <span class="s1">&#39;add new repo wt-shell and assign RW+ to james&#39;</span>
+git push
+</code></pre></div>
+<p>推送的时候应该看到类似这样的信息</p>
+
+<blockquote>
+<p>Counting objects: 7, done.<br>
+Delta compression using up to 4 threads.<br>
+Compressing objects: 100% (3/3), done.<br>
+Writing objects: 100% (4/4), 395 bytes, done.<br>
+Total 4 (delta 1), reused 0 (delta 0)<br>
+remote: Initialized empty Git repository in /home/git/repositories/wt-shell.git/<br>
+To <a href="mailto:git@192.168.20.120">git@192.168.20.120</a>:gitolite-admin<br>
+   6de90b8..52737aa  master -&gt; master   </p>
+
+<p>注释：remote开头的一行说明，git已经帮你创建了wt-shell仓库</p>
+</blockquote>
+
+<h2>通配符仓库的创建示例</h2>
+
+<blockquote>
+<p>说明：通配符仓库事先不能确定名字，所以不会帮你创建，在你clone的时候才会创建。</p>
+</blockquote>
+
+<p>编辑conf/gitolite.conf文件在里面加入类似下面的内容</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">repo sandbox/.+$    
+  C      =   jack    
+  RW+C   =   jack    
+</code></pre></div>
+<blockquote>
+<p>注意:<code>C = username</code>的一行必不可少，这里的C是指创建仓库的意思，下一行的RW+C中的C是指创建引用(branch,tag)的意思。</p>
+</blockquote>
+
+<p>保存后提交并推送到服务上去</p>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">git add conf
+git commit -m <span class="s1">&#39;add sandbox repo&#39;</span>
+git push
+</code></pre></div>
+<blockquote>
+<p>注释：再次查看push时输出的信息，应该没有创建仓库的信息。</p>
+</blockquote>
+
+<p>这时jack克隆仓库的时候会自动创建。<br>
+使用jack用户执行如下命令</p>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">git clone git@192.168.20.120:sandbox/test.git
+</code></pre></div>
+<p>输出应该类似这样</p>
+
+<blockquote>
+<p>Cloning into &#39;test&#39;...<br>
+Initialized empty Git repository in /home/git/repositories/sandbox/test.git/<br>
+warning: You appear to have cloned an empty repository.   </p>
+</blockquote>
+
+<p>如果你的输出报这样的错</p>
+
+<blockquote>
+<p>FATAL: R any sandbox/test jenny DENIED by fallthru<br>
+(or you mis-spelled the reponame)<br>
+fatal: The remote end hung up unexpectedly   </p>
+</blockquote>
+
+<p>一般是因为没有<code>C=username</code>这一行，注意是只有C的一行。</p>
+
+<h1>参考资料</h1>
+
+<p><a href="http://williamherry.com/blog/2012/10/03/install-gitolite/">http://williamherry.com/blog/2012/10/03/install-gitolite/</a>     </p>
+
+<p><a href="http://www.ginano.net/centos-gitolite-git-server">http://www.ginano.net/centos-gitolite-git-server</a>   </p>
+
+<p><a href="http://www.bigfastblog.com/gitolite-installation-step-by-step">http://www.bigfastblog.com/gitolite-installation-step-by-step</a>    </p>
+
+<p><a href="http://blog.sina.com.cn/s/blog_6b61ec070101f44e.html">http://blog.sina.com.cn/s/blog_6b61ec070101f44e.html</a>   </p>
+
+<p><a href="http://www.ossxp.com/doc/git/gitolite.html#id5">http://www.ossxp.com/doc/git/gitolite.html#id5</a>   </p>
+
+<p><a href="http://zengrong.net/post/1720.htm">http://zengrong.net/post/1720.htm</a>   </p>
+
+<p><a href="http://aeturnalus.com/software/redmine-git-hosting-setup-ubuntu-12-04-lts/">http://aeturnalus.com/software/redmine-git-hosting-setup-ubuntu-12-04-lts/</a>    </p>
+
+<p><a href="http://roclinux.cn/?p=2553">http://roclinux.cn/?p=2553</a>   </p>
+
+<hr>
+
+<p>作者：chris hill</p>
+
+<p>微博：<a href="http://www.weibo.com/weittor">@翻滚的蜗牛blog</a></p>
+
+    </article>
+    <!-- Duoshuo Comment BEGIN -->
+    <div id="comments">
+        <div class="ds-thread" data-thread-key="/set-up-gitolite"  data-title="CentOS系统搭建gitolite服务 - 翻滚的蜗牛"></div>
+    </div>
+<!-- Duoshuo Comment END -->
+</div>
+
+    </div>
+</div>
+<footer class="site-footer">
+
+    <div class="wrap">
+        <div class="footer-col-1 column">
+            <div class="github">
+                <!-- <span class="icon github"> -->
+                <svg version="1.1" class="github-icon-svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                    viewBox="0 0 16 16" enable-background="new 0 0 16 16" xml:space="preserve">
+                    <path fill-rule="evenodd" clip-rule="evenodd" fill="#000" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761
+                    c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32
+                    c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472
+                    c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037
+                    C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65
+                    c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261
+                    c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082
+                    c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129
+                    c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/>
+                </svg>
+                <!-- </span> -->
+            </div>
+            <a href="https://github.com/taizilongxu">
+                Fork form Hackerxu
+            </a>
+        </div>
+        <div class="footer-col-2">
+            <p>© 2010 - 2014 by <font style="color:#f44336">❤ </font> <a href="http://github.com/weittor">chris.hill</a></p>
+        </div>
+        <!-- <div class="footer-col-3 column">
+      <p class="text">Python,Linux,DevOps,Cloud</p>
+    </div> -->
+    </div>
+    <div class="scroll-top"><i class="fa fa-arrow-circle-up"></i></div>
+</footer>
+
+
+<!-- mathjax -->
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}
+});
+</script>
+<script type="text/javascript"
+src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<!-- highlight -->
+<script src="/js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<!-- pleace change it! -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"weittor"};
+(function() {
+ var ds = document.createElement('script');
+ ds.type = 'text/javascript';ds.async = true;
+ ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+ ds.charset = 'UTF-8';
+ (document.getElementsByTagName('head')[0]
+  || document.getElementsByTagName('body')[0]).appendChild(ds);
+ })();
+</script>
+<!-- top-scrooll -->
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/3.0.4/jquery.imagesloaded.js"></script>
+<script type="text/javascript">
+
+$(window).scroll(function() {
+
+        if($(this).scrollTop() > 100) {
+        $('.scroll-top').fadeIn(200);
+        } else {
+        $('.scroll-top').fadeOut(200);
+        }
+        });
+
+$('.scroll-top').bind('click', function(e) {
+        e.preventDefault();
+        $('body,html').animate({scrollTop:0},200);
+        });
+</script>
+</body>
+</html>

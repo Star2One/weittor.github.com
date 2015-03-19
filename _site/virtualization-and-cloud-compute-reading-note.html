@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!-- 手机端页面 -->
+<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>[虚拟化与云计算].读书笔记</title>
+<link rel="shortcut icon" href=" /img/github.ico"/>
+<link rel="bookmark" href="/img/github.ico"/>
+<meta name="viewport" content="width=device-width">
+<meta name="description" content="Python,Linux,DevOps,Cloud">
+<link rel="canonical" href="http://blog.weittor.com/virtualization-and-cloud-compute-reading-note.html">
+<!-- Custom CSS -->
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/css/github.css">
+<!-- 返回顶部 -->
+<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+<script src="/js/jquery.js"></script>
+<script src="/js/function_about.js"></script>
+<!--  -->
+</head>
+
+<body>
+<header class="site-header">
+  <meta name="baidu-site-verification" content="93L8YEZrTw" />
+    <div class="wrap">
+        <a class="site-title" href="/"><h1><strong> <font style="color:#39B3D7" >翻</font><font style="color:#ED9C28">滚</font><font style="color:#47A447">的</font><font style="color:#D9534F">蜗</font><font style="color:#3276B1">牛</font>
+                </strong>
+        </h1></a>
+        <nav class="site-nav">
+            <a href="#" class="menu-icon">
+                <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                    viewBox="0 0 18 15" enable-background="new 0 0 18 15" xml:space="preserve">
+                    <path fill="#505050" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0
+                    h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+                    <path fill="#505050" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484
+                    h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+                    <path fill="#505050" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0
+                    c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+                </svg>
+            </a>
+            <div class="trigger">
+                
+                
+                <a class="page-link" href="/about/">About</a>
+                
+                
+                
+                <a class="page-link" href="/archive/">Archive</a>
+                
+                
+                
+                <a class="page-link" href="/categories/">Categories</a>
+                
+                
+                
+                <a class="page-link" href="/tags/">Tags</a>
+                
+                
+                
+                <a class="page-link" href="/atom.xml">Rss</a>
+                
+                
+            </div>
+        </nav>
+    </div>
+
+</header>
+
+<div class="page-content">
+    <div class="wrap">
+        <div class="post">
+    <header class="post-header">
+        <h1><a href="/virtualization-and-cloud-compute-reading-note.html">[虚拟化与云计算].读书笔记</a></h1>
+        <p class="meta"><i class="fa fa-calendar"></i> 2012-09-02&nbsp&nbsp&nbsp<i class="fa fa-folder-open"></i>&nbsp&nbsp&nbsp<i class="fa fa-tags"></i>&nbsp&nbsp<a href="/tags/#读书">读书</a></p>
+    </header>
+    <article class="post-content">
+        <hr>
+
+<p><img src="http://img3.douban.com/lpic/s4661122.jpg" alt=""></p>
+
+<p>最近在学习云计算的过程中，发现了一本好书&lt;虚拟化与云计算&gt;，推荐大家阅读。</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">该书通过对虚拟化和云计算技术的分类介绍，使大家能够比较全面的了解虚拟化和云计算的相关原理和应用场景。  
+
+另外本书列举了目前市场上主要的虚拟化和云计算产品，通过对相关产品进行介绍，使读者在学习技术原理的基础上，可以结合目前市场的产品应用，更深入的理解虚拟化和云计算的应用场景和发展前景。
+</code></pre></div>
+<p>本文是chris.hill在阅读书中虚拟化技术时所做的读书笔记，希望通过简要的介绍，能够使大家对虚拟化的概念和分类有一个大概的了解。</p>
+
+<!-- more -->
+
+<h1>定义</h1>
+
+<p>虚拟化是资源的逻辑表示，它不受物理限制的约束虚拟化的三层含义</p>
+
+<ul>
+<li><p>虚拟化的对象是各种各样的资源   </p></li>
+<li><p>经过虚拟化后的逻辑资源对用户隐藏了不必要的细节    </p></li>
+<li><p>用户可以在虚拟环境中实现其在真实环境中的部分或者全部功能   </p></li>
+</ul>
+
+<p>虚拟化的主要目标是对包括基础设施、系统和软件等IT资源的表示、访问和管理进行简化，并对这些资源提供标准的接口来接收输入和提供输出。  </p>
+
+<p>虚拟化的使用者可以是最终用户、应用程序或者是服务。
+虚拟化技术降低了资源使用者与资源具体实现之间的耦合程度，让使用者不再依赖于资源的某种特定实现。</p>
+
+<h1>虚拟化分类</h1>
+
+<p>根据应用层次的不同，虚拟化主要分为基础设施虚拟化、系统虚拟化和软件虚拟化三种。</p>
+
+<h2>基础设施虚拟化</h2>
+
+<p>基础设施虚拟化主要分为<em>网络虚拟化、存储虚拟化</em>两种。</p>
+
+<h3>网络虚拟化</h3>
+
+<p>网络虚拟化分为<em>局域网络虚拟化和广域网络虚拟化</em>。</p>
+
+<ul>
+<li><p>局域网络虚拟化典型代表为VLAN虚拟局域网技术  </p></li>
+<li><p>广域网络虚拟化典型代表为VPN虚拟专用网技术   </p></li>
+</ul>
+
+<h3>存储虚拟化</h3>
+
+<p>存储虚拟化是指为物理的存储设备提供一个抽象的逻辑视图，用户可以通过这个视图中的统一逻辑接口来访问被整合的存储资源。  </p>
+
+<p>存储虚拟化技术主要有基于存储设备的存储虚拟化和基于网络的存储虚拟化两种主要形式。</p>
+
+<ul>
+<li><p>基于存储设备虚拟化主要代表为RAID磁盘阵列技术；   </p></li>
+<li><p>基于网络的存储虚拟化主要代表为NAS网络附加存储技术和SAN存储区域网络技术；</p></li>
+</ul>
+
+<h2>系统虚拟化</h2>
+
+<p>系统虚拟化实现了操作系统与物理计算机的分离，使得一台物理计算机上可以同时安装和运行一个或多个虚拟的操作系统。  </p>
+
+<p>系统虚拟化的核心思想是使用虚拟化软件在一台物理机上虚拟出一台或多台虚拟机VM。  </p>
+
+<p>虚拟机是指使用系统虚拟化技术，运行在一个隔离环境中，具有完整硬件功能的逻辑计算机系统，包括客户操作系统和其中的应用程序。</p>
+
+<p>系统虚拟化根据应用场景的不同分为服务器虚拟化和桌面虚拟化。</p>
+
+<h3>服务器虚拟化</h3>
+
+<p>服务器虚拟化将虚拟化技术应用于服务器上，将一个服务器虚拟成若干个服务器使用。
+目前最广泛的服务器虚拟化产品有：</p>
+
+<ul>
+<li><p>Citrix公司的Xen   </p></li>
+<li><p>IBM公司的PowerVMzVM   </p></li>
+<li><p>Microsoft公司的VirtualPCVirtual Server和Hyper-V  </p></li>
+<li><p>VMware公司的VMware ServerVMware WorkstationVMware Player和VMware ESX Server</p></li>
+</ul>
+
+<h4>典型实现</h4>
+
+<ul>
+<li>虚拟机监视器VMM<br></li>
+</ul>
+
+<p>虚拟机监视器负责对虚拟机提供硬件资源抽象，为客户操作系统提供运行环境。</p>
+
+<ul>
+<li>虚拟化平台Hypervisor</li>
+</ul>
+
+<p>负责虚拟机的托管和管理。它直接运行在硬件之上，因此其实现直接受底层体系结构的约束。</p>
+
+<h4>服务器虚拟化类型</h4>
+
+<p>根据虚拟化层实现方式的不同，服务器虚拟化主要有两种类型：</p>
+
+<ul>
+<li>寄宿虚拟化<br></li>
+</ul>
+
+<p>虚拟机监视器运行在宿主操作系统之上，利用宿主操作系统的功能来实现硬件资源的抽象和虚拟机的管理。  </p>
+
+<p>典型产品：VMware WorkstationMicrosoft Virtual PC</p>
+
+<ul>
+<li>原生虚拟化<br></li>
+</ul>
+
+<p>虚拟化平台直接运行在硬件之上，虚拟机运行在虚拟化平台上，虚拟化平台提供指令集和设备接口，以提供对虚拟机的支持。  </p>
+
+<p>典型产品：Citrix XenVMware ESX ServerMicrosfot Hyper-V</p>
+
+<h4>关键特性</h4>
+
+<p>服务器虚拟化关键特性：多实例、隔离性、封装性、高性能</p>
+
+<h4>核心技术</h4>
+
+<p>服务器虚拟化必备的关键技术是对三种硬件资源的虚拟化：CPU、内存、设备与IO</p>
+
+<ul>
+<li>cpu虚拟化技术<br></li>
+</ul>
+
+<p>全虚拟化半虚拟化硬件辅助虚拟化   </p>
+
+<ul>
+<li>内存虚拟化技术<br></li>
+</ul>
+
+<p>实现方法主要有影子页表法、页表写入法</p>
+
+<ul>
+<li>设备与IO虚拟化技术<br></li>
+</ul>
+
+<p>把物理机的真实设备统一管理，包装成多个虚拟设备给若干个虚拟机使用，相应每个虚拟机的设备访问请求和IO请求</p>
+
+<h4>技术优势</h4>
+
+<ul>
+<li><p>降低运营成本   </p></li>
+<li><p>提高应用兼容性  </p></li>
+<li><p>加速应用部署   </p></li>
+<li><p>提高服务可用性   </p></li>
+<li><p>提升资源利用率   </p></li>
+<li><p>动态调度资源   </p></li>
+<li><p>减低能源消耗   </p></li>
+</ul>
+
+<h3>桌面虚拟化</h3>
+
+<p>将用户的桌面环境与其使用的终端设备解耦合。服务器上存放的是每个用户的完整桌面环境。</p>
+
+<h2>软件虚拟化</h2>
+
+<p>软件虚拟化提供了针对软件的虚拟化环境，主要包括应用虚拟化和高级语言虚拟化。</p>
+
+<p>应用虚拟化将应用程序与操作系统解耦合，为应用程序提供一个包括应用程序可执行文件和它所需要的运行环境在内的完整的虚拟化运行环境。</p>
+
+<p>高级语言虚拟化，由高级语言编写的程序被编译为标准的中间指令。  </p>
+
+<p>这些中间指令在解释执行或动态翻译环境中被执行，因而可以运行在不同的体系结构之上，主要解决的就是可执行程序在不同体系结构计算机间迁移的问题。  </p>
+
+<p>典型的代表为<em>Java虚拟机技术</em> </p>
+
+<p><img src="/images/2012year/2012-9-2_%E8%99%9A%E6%8B%9F%E5%8C%96%E5%88%86%E7%B1%BB.jpeg" alt="Green glass towers"></p>
+
+<hr>
+
+<p>作者：chris hill</p>
+
+<p>微博：<a href="http://www.weibo.com/weittor">@翻滚的蜗牛blog</a></p>
+
+    </article>
+    <!-- Duoshuo Comment BEGIN -->
+    <div id="comments">
+        <div class="ds-thread" data-thread-key="/virtualization-and-cloud-compute-reading-note"  data-title="[虚拟化与云计算].读书笔记 - 翻滚的蜗牛"></div>
+    </div>
+<!-- Duoshuo Comment END -->
+</div>
+
+    </div>
+</div>
+<footer class="site-footer">
+
+    <div class="wrap">
+        <div class="footer-col-1 column">
+            <div class="github">
+                <!-- <span class="icon github"> -->
+                <svg version="1.1" class="github-icon-svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                    viewBox="0 0 16 16" enable-background="new 0 0 16 16" xml:space="preserve">
+                    <path fill-rule="evenodd" clip-rule="evenodd" fill="#000" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761
+                    c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32
+                    c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472
+                    c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037
+                    C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65
+                    c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261
+                    c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082
+                    c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129
+                    c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/>
+                </svg>
+                <!-- </span> -->
+            </div>
+            <a href="https://github.com/taizilongxu">
+                Fork form Hackerxu
+            </a>
+        </div>
+        <div class="footer-col-2">
+            <p>© 2010 - 2014 by <font style="color:#f44336">❤ </font> <a href="http://github.com/weittor">chris.hill</a></p>
+        </div>
+        <!-- <div class="footer-col-3 column">
+      <p class="text">Python,Linux,DevOps,Cloud</p>
+    </div> -->
+    </div>
+    <div class="scroll-top"><i class="fa fa-arrow-circle-up"></i></div>
+</footer>
+
+
+<!-- mathjax -->
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}
+});
+</script>
+<script type="text/javascript"
+src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<!-- highlight -->
+<script src="/js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<!-- pleace change it! -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"weittor"};
+(function() {
+ var ds = document.createElement('script');
+ ds.type = 'text/javascript';ds.async = true;
+ ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+ ds.charset = 'UTF-8';
+ (document.getElementsByTagName('head')[0]
+  || document.getElementsByTagName('body')[0]).appendChild(ds);
+ })();
+</script>
+<!-- top-scrooll -->
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/3.0.4/jquery.imagesloaded.js"></script>
+<script type="text/javascript">
+
+$(window).scroll(function() {
+
+        if($(this).scrollTop() > 100) {
+        $('.scroll-top').fadeIn(200);
+        } else {
+        $('.scroll-top').fadeOut(200);
+        }
+        });
+
+$('.scroll-top').bind('click', function(e) {
+        e.preventDefault();
+        $('body,html').animate({scrollTop:0},200);
+        });
+</script>
+</body>
+</html>

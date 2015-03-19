@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!-- 手机端页面 -->
+<meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>Logrotate日志轮询服务使用说明</title>
+<link rel="shortcut icon" href=" /img/github.ico"/>
+<link rel="bookmark" href="/img/github.ico"/>
+<meta name="viewport" content="width=device-width">
+<meta name="description" content="Python,Linux,DevOps,Cloud">
+<link rel="canonical" href="http://blog.weittor.com/logrotate-examples-by-weittor.html">
+<!-- Custom CSS -->
+<link rel="stylesheet" href="/css/main.css">
+<link rel="stylesheet" href="/css/github.css">
+<!-- 返回顶部 -->
+<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+<script src="/js/jquery.js"></script>
+<script src="/js/function_about.js"></script>
+<!--  -->
+</head>
+
+<body>
+<header class="site-header">
+  <meta name="baidu-site-verification" content="93L8YEZrTw" />
+    <div class="wrap">
+        <a class="site-title" href="/"><h1><strong> <font style="color:#39B3D7" >翻</font><font style="color:#ED9C28">滚</font><font style="color:#47A447">的</font><font style="color:#D9534F">蜗</font><font style="color:#3276B1">牛</font>
+                </strong>
+        </h1></a>
+        <nav class="site-nav">
+            <a href="#" class="menu-icon">
+                <svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                    viewBox="0 0 18 15" enable-background="new 0 0 18 15" xml:space="preserve">
+                    <path fill="#505050" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0
+                    h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+                    <path fill="#505050" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484
+                    h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+                    <path fill="#505050" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0
+                    c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+                </svg>
+            </a>
+            <div class="trigger">
+                
+                
+                <a class="page-link" href="/about/">About</a>
+                
+                
+                
+                <a class="page-link" href="/archive/">Archive</a>
+                
+                
+                
+                <a class="page-link" href="/categories/">Categories</a>
+                
+                
+                
+                <a class="page-link" href="/tags/">Tags</a>
+                
+                
+                
+                <a class="page-link" href="/atom.xml">Rss</a>
+                
+                
+            </div>
+        </nav>
+    </div>
+
+</header>
+
+<div class="page-content">
+    <div class="wrap">
+        <div class="post">
+    <header class="post-header">
+        <h1><a href="/logrotate-examples-by-weittor.html">Logrotate日志轮询服务使用说明</a></h1>
+        <p class="meta"><i class="fa fa-calendar"></i> 2013-09-30&nbsp&nbsp&nbsp<i class="fa fa-folder-open"></i>&nbsp&nbsp&nbsp<i class="fa fa-tags"></i>&nbsp&nbsp<a href="/tags/#Linux">Linux</a></p>
+    </header>
+    <article class="post-content">
+        <hr>
+
+<p>有效管理log日志是系统管理员必备的技能之一。  </p>
+
+<p><em>chris hill</em>在最近的工作中，接触到了logrotate有关的内容，现总结一些常用的功能，分享给大家。  </p>
+
+<p>本文主要介绍如何通过logrotate工具实现如下操作:</p>
+
+<ul>
+<li><p>当日志超过一定大小之后，对日志进行轮询</p></li>
+<li><p>日志轮询之后，继续向新的日志文件输出日志</p></li>
+<li><p>压缩轮询后的日志</p></li>
+<li><p>指定轮询时的压缩选项</p></li>
+<li><p>为轮询的日志指定特定的名称</p></li>
+<li><p>日志轮询之后，立即执行自定义的shell脚本</p></li>
+<li><p>删除过期的轮询日志文件</p></li>
+<li><p>通过邮件发送轮询的日志信息</p></li>
+</ul>
+
+<h1>Logrotate简介</h1>
+
+<p>logrotate程序是一个日志文件管理工具。  </p>
+
+<p>通过logrotate工具，可以自动进行日志转储、删除、压缩和邮件发送的工作。  </p>
+
+<p>我们可以根据日志文件的大小，也可以根据其天数来转储，这个过程一般通过 cron 程序来执行。 
+logrotate 程序还可以用于压缩日志文件，以及发送日志到指定的E-mail 。</p>
+
+<p>logrotate 的运行分为三步:</p>
+
+<ul>
+<li><p>判断系统的日志文件</p></li>
+<li><p>建立转储计划以及参数</p></li>
+<li><p>通过cron daemon 服务(*下面的代码使用了 Red Hat Linux 缺省的crontab服务 *)来执行logrotate</p></li>
+</ul>
+
+<!-- more -->
+
+<h1>配置选项说明</h1>
+
+<h2>Logrotate配置文件</h2>
+
+<p>为了保证Logrotate配置正确，需要了解各个配置文件的用处。</p>
+
+<ul>
+<li><p>/usr/sbin/logrotate – logrotate执行程序</p></li>
+<li><p>/etc/cron.daily/logrotate – 需要每天执行的logrotate脚本</p></li>
+</ul>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">cat /etc/cron.daily/logrotate
+</code></pre></div>
+<p>代码如下</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh"><span class="c">#!/bin/sh</span>
+/usr/sbin/logrotate /etc/logrotate.conf
+<span class="nv">EXITVALUE</span><span class="o">=</span><span class="nv">$?</span>
+<span class="k">if</span> <span class="o">[</span> <span class="nv">$EXITVALUE</span> !<span class="o">=</span> <span class="m">0</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
+    /usr/bin/logger -t logrotate <span class="s2">&quot;ALERT exited abnormally with [$EXITVALUE]&quot;</span>
+<span class="k">fi</span>
+<span class="nb">exit </span>0
+</code></pre></div>
+<ul>
+<li>/etc/logrotate.conf – logrotate程序的主配置文件</li>
+</ul>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">cat /etc/logrotate.conf
+</code></pre></div>
+<p>内容如下：</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">    weekly
+    rotate 4
+    create
+    include /etc/logrotate.d
+    /var/log/wtmp {
+        monthly
+        minsize 1M
+        create 0664 root utmp
+        rotate 1
+    }
+</code></pre></div>
+<ul>
+<li>/etc/logrotate.d – 可单独放置不同程序的日志轮询配置文件或者自定义的日志轮询配置文件在该目录下，便于管理。
+许多程序（典型的应用有：apache, samba, cron以及syslog）都将程序轮询的配置文件放置于该目录下面。<br></li>
+</ul>
+
+<p>例如yum的log轮询文件如下:</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">cat /etc/logrotate.d/yum
+</code></pre></div>
+<p>内容如下：</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">    /var/log/yum.log {
+        missingok
+        notifempty
+        size 30k
+        yearly
+        create 0600 root root
+    }
+</code></pre></div>
+<h2>Logrotate指定文件大小</h2>
+
+<p>设置每当log文件增加到1M时，就进行轮询(例如：<em>chris hill</em>自定义的日志文件为/tmp/weittor.log)。</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">cat logrotate.conf
+</code></pre></div>
+<p>内容如下：</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">    /tmp/weittor.log {
+            size 1M
+            create 700 weittor weittor
+            rotate 4
+    }
+</code></pre></div>
+<p>以上三个选项的解释如下:</p>
+
+<ul>
+<li><p><strong>size 1M</strong>  指定日志文件大于或等于1M时，即进行轮询。</p></li>
+<li><p><strong>create 700 weittor weittor</strong> 对原始log进行轮询，并创建新的日志文件，新文件的权限为700，属主和数组分别为weittor:weittor。</p></li>
+<li><p><strong>rotate 4</strong> 轮询文件保留的数量。这里仅保留4个经过轮询的日志文件。</p>
+
+<blockquote>
+<p>注意：当写入该日志文件的应用程序没有经过重启操作的情况下，应用程序会持续写入由该方式所产生的轮询日志文件，即使该轮询日志文件已经经过了重命名(weittor.log.1)。</p>
+</blockquote></li>
+</ul>
+
+<h2>copytruncate选项</h2>
+
+<p>解释：持续写入日志文件到轮询之后新创建的文件。</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">cat logrotate.conf
+</code></pre></div>
+<p>内容如下：</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">    /tmp/weittor.log {
+             size 1m
+             copytruncate
+             rotate 4
+    }
+</code></pre></div>
+<p>copytruncate选项告诉logrotate通过复制的方式创建轮询的日志文件，之后将原日志文件大小清零。  </p>
+
+<p>这种方式对持续写入该日志文件的程序不会造成影响，能够保证生成该日志的程序能够一直将日志输入到正常的日志文件内。  </p>
+
+<p>与copytruncate选项作用相对的参数nocopytruncate，表示备份日志文件但是不截断，即只备份日志文件，但是不清空该文件。</p>
+
+<h2>Logrotate compress选项</h2>
+
+<p>解释：压缩日志。  </p>
+
+<p>使用compress选型，可以通过gzip工具对轮询的日志进行压缩处理。</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">cat logrotate.conf
+</code></pre></div>
+<p>内容如下：    </p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">    /tmp/weittor.log {
+            size 1k
+            copytruncate
+            create 700 bala bala
+            rotate 4
+            compress
+    }
+</code></pre></div>
+<p>输出的压缩日志格式为</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">ls /tmp/weittor*
+</code></pre></div>
+<p>输出内容如下：    </p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">weittor.log.1.gz weittor.log
+</code></pre></div>
+<h2>Logrotate dateext选项</h2>
+
+<p>解释：配置带有日期格式的轮询日志文件</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">cat logrotate.conf
+</code></pre></div>
+<p>输出内容如下：    </p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">    /tmp/weittor.log {
+            size 1M
+            copytruncate
+            create 700 weittor weittor
+            dateext
+    dateformat -%Y%m%d
+            rotate 4
+            compress
+    }
+</code></pre></div>
+<p>日志输出格式如下</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">ls -lrt /var/log/messages*
+</code></pre></div>
+<p>输出内容如下：</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">    -rw------- 1 root root 963 Sep 22 03:28 /var/log/messages
+    -rw------- 1 root root 239 Sep 26 09:52 /var/log/messages-20130926.gz
+</code></pre></div>
+<p><em>注意</em></p>
+
+<ul>
+<li><p>dateformat必须配合dateext使用，目前暂只支持 %Y %m %d %s 这四个参数</p></li>
+<li><p>如上的日志轮询配置每天仅执行一次。如果logrotate在同一天执行相同的操作的话，前一次轮询所产生的文件会和后面轮询所产生的轮询日志文件造成文件名冲突。因此，当天logrotate执行成功一次之后，后续的轮询将不会执行。</p></li>
+</ul>
+
+<h2>Logrotate monthly/daily/weekly 选项</h2>
+
+<p>解释：每月/每天/每周执行轮询操作</p>
+
+<ul>
+<li>每月执行轮询操作</li>
+</ul>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">cat logrotate.conf
+</code></pre></div>
+<p>输出内容如下：    </p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">    /tmp/weittor.log {
+            monthly
+            copytruncate
+            rotate 4
+            compress
+    }
+</code></pre></div>
+<ul>
+<li>每周执行轮询操作</li>
+</ul>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">cat logrotate.conf
+</code></pre></div>
+<p>输出内容如下：    </p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">    /tmp/weittor.log {
+            weekly
+            copytruncate
+            rotate 4
+            compress
+    }
+</code></pre></div>
+<ul>
+<li>每天执行轮询操作</li>
+</ul>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">cat logrotate.conf
+</code></pre></div>
+<p>输出内容如下：</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">    /tmp/weittor.log {
+            daily
+            copytruncate
+            rotate 4
+            compress
+    }
+</code></pre></div>
+<h2>Logrotate postrotate endscript选项</h2>
+
+<p>解释：在轮询日志操作执行之后，立即执行自定义的shell脚本。  </p>
+
+<p>Logrotate允许用户在日志轮询操作执行之后，运行自定义的shell脚本。  </p>
+
+<p>如下配置指定在轮询操作之后，执行自定义的myscript.sh。</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">cat logrotate.conf
+</code></pre></div>
+<p>输出内容如下：</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">    /tmp/weittor.log {
+            size 1m
+            copytruncate
+            rotate 4
+            compress
+            postrotate
+                   /home/weittor/myscript.sh
+            endscript
+    }
+</code></pre></div>
+<h2>Logrotate postrotate endscript 选项</h2>
+
+<p>解释：在轮询日志操作执行之前执行自定义的shell脚本</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">cat logrotate.d/messages
+</code></pre></div>
+<p>输出内容如下：    </p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">    /var/log/messages{
+    prerotate
+    /usr/bin/chattr -a /var/log/messages
+    endscript
+    postrotate
+    /usr/bin/kill -HUP syslogd
+    /usr/bin/chattr +a /var/log/messages
+    endscript
+    }
+</code></pre></div>
+<ul>
+<li><p>第一行指定脚本对 /var/log messages 有效。</p></li>
+<li><p>prerotate 命令指定转储以前的动作</p>
+
+<ul>
+<li>/usr/bin/chattr -a 去掉/var/log/messages文件的“只追加”属性 </li>
+<li>endscript 结束 </li>
+</ul></li>
+<li><p>prerotate 部分的脚本postrotate 指定转储后的动作。</p>
+
+<ul>
+<li>/usr/bin/killall -HUP syslogd 用来重新初始化系统日志守护程序 syslogd。</li>
+<li>/usr/bin/chattr +a /var/log/messages 重新为 /var/log/messages 文件指定“只追加”属性，这样防止程序员或用户覆盖此文件。</li>
+</ul></li>
+<li><p>最后的 endscript 用于结束 postrotate 部分的脚本。</p></li>
+</ul>
+
+<h2>9. Logrotate maxage选项</h2>
+
+<p>解释：删除过期的轮询日志文件。  </p>
+
+<p>通过maxage选项，使logrotate在指定时间内删除过期的轮询日志文件。  </p>
+
+<p>如下配置，指定logrotate删除10天之后的轮询日志文件。</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">cat logrotate.conf
+</code></pre></div>
+<p>输出内容如下：    </p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">    /tmp/weittor.log {
+            size 1m
+            copytruncate
+            rotate 4
+            compress
+            maxage 10
+    }
+</code></pre></div>
+<h2>Logrotate missingok选项</h2>
+
+<p>解释：忽略轮询错误信息。  </p>
+
+<p>通过missingok选项，能够忽略由于当前文件不存在所引起的报错信息。</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">cat logrotate.conf
+</code></pre></div>
+<p>输出内容如下：    </p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">    /tmp/weittor.log {
+            size 1k
+            copytruncate
+            rotate 4
+            compress
+            missingok
+    }
+</code></pre></div>
+<h2>Logrotate compresscmd and compressext选项</h2>
+
+<p>解释：自定义压缩指令。</p>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">cat logrotate.conf
+</code></pre></div>
+<p>输出内容如下：</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">    /tmp/weittor.log {
+            size 1m
+            copytruncate
+            compress
+            compresscmd /bin/bzip2
+            compressext .bz2
+            rotate 4
+    }
+</code></pre></div>
+<p>选项说明</p>
+
+<ul>
+<li><p>compress 启用日志压缩功能</p></li>
+<li><p>compresscmd /bin/bzip2 自定义压缩指令。例如：/bin/bzip2</p></li>
+<li><p>compressext .bz2 轮询日志压缩文件的扩展名。默认扩展名为.gz，这里设置为：.bz2</p></li>
+</ul>
+
+<h2>与mail有关选项</h2>
+
+<ul>
+<li><p>errors address 轮询时的错误信息发送到指定的Email 地址</p></li>
+<li><p>mail address 把轮询的日志文件发送到指定的Email 地址</p></li>
+<li><p>nomail 轮询时不发送日志文件</p></li>
+</ul>
+<div class="highlight"><pre><code class="language-sh" data-lang="sh">cat logrotate.conf
+</code></pre></div>
+<p>输出内容如下：    </p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">    /tmp/weittor.log {
+            size 1m
+            copytruncate
+    mail weittor#mail.com
+            rotate 4
+    }
+</code></pre></div>
+<p>更多内容请访问<a href="www.weittor.com">维特说</a></p>
+
+<h1>参考资料</h1>
+
+<p><a href="http://blog.csdn.net/balderfan/article/details/7571773">http://blog.csdn.net/balderfan/article/details/7571773</a></p>
+
+<p><a href="http://linux.vbird.org/linux_basic/0570syslog.php#rotate">http://linux.vbird.org/linux_basic/0570syslog.php#rotate</a>  </p>
+
+<p><a href="http://man.he.net/man8/logrotate">http://man.he.net/man8/logrotate</a>  </p>
+
+<p><a href="http://www.thegeekstuff.com/2010/07/logrotate-examples/">http://www.thegeekstuff.com/2010/07/logrotate-examples/</a></p>
+
+<hr>
+
+<p>作者：chris hill</p>
+
+<p>微博：<a href="http://www.weibo.com/weittor">@翻滚的蜗牛blog</a></p>
+
+    </article>
+    <!-- Duoshuo Comment BEGIN -->
+    <div id="comments">
+        <div class="ds-thread" data-thread-key="/logrotate-examples-by-weittor"  data-title="Logrotate日志轮询服务使用说明 - 翻滚的蜗牛"></div>
+    </div>
+<!-- Duoshuo Comment END -->
+</div>
+
+    </div>
+</div>
+<footer class="site-footer">
+
+    <div class="wrap">
+        <div class="footer-col-1 column">
+            <div class="github">
+                <!-- <span class="icon github"> -->
+                <svg version="1.1" class="github-icon-svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+                    viewBox="0 0 16 16" enable-background="new 0 0 16 16" xml:space="preserve">
+                    <path fill-rule="evenodd" clip-rule="evenodd" fill="#000" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761
+                    c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32
+                    c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472
+                    c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037
+                    C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65
+                    c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261
+                    c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082
+                    c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129
+                    c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/>
+                </svg>
+                <!-- </span> -->
+            </div>
+            <a href="https://github.com/taizilongxu">
+                Fork form Hackerxu
+            </a>
+        </div>
+        <div class="footer-col-2">
+            <p>© 2010 - 2014 by <font style="color:#f44336">❤ </font> <a href="http://github.com/weittor">chris.hill</a></p>
+        </div>
+        <!-- <div class="footer-col-3 column">
+      <p class="text">Python,Linux,DevOps,Cloud</p>
+    </div> -->
+    </div>
+    <div class="scroll-top"><i class="fa fa-arrow-circle-up"></i></div>
+</footer>
+
+
+<!-- mathjax -->
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}
+});
+</script>
+<script type="text/javascript"
+src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<!-- highlight -->
+<script src="/js/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+<!-- pleace change it! -->
+<script type="text/javascript">
+var duoshuoQuery = {short_name:"weittor"};
+(function() {
+ var ds = document.createElement('script');
+ ds.type = 'text/javascript';ds.async = true;
+ ds.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') + '//static.duoshuo.com/embed.js';
+ ds.charset = 'UTF-8';
+ (document.getElementsByTagName('head')[0]
+  || document.getElementsByTagName('body')[0]).appendChild(ds);
+ })();
+</script>
+<!-- top-scrooll -->
+<script src="//cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/3.0.4/jquery.imagesloaded.js"></script>
+<script type="text/javascript">
+
+$(window).scroll(function() {
+
+        if($(this).scrollTop() > 100) {
+        $('.scroll-top').fadeIn(200);
+        } else {
+        $('.scroll-top').fadeOut(200);
+        }
+        });
+
+$('.scroll-top').bind('click', function(e) {
+        e.preventDefault();
+        $('body,html').animate({scrollTop:0},200);
+        });
+</script>
+</body>
+</html>
